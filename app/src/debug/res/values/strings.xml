@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Distinguishes debug builds in the launcher and Home app picker. -->
+    <string name="app_name">Index Launcher (debug)</string>
+</resources>
