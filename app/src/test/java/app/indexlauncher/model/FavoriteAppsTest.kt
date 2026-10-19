@@ -14,6 +14,32 @@ class FavoriteAppsTest {
         assertEquals(listOf(clock.id), toggleFavorite(ids, maps.id))
     }
 
+    @Test fun favoritesCanMoveUpAndDownWithoutChangingMembership() {
+        val ids = listOf(clock.id, maps.id, camera.id)
+        assertEquals(listOf(camera.id, clock.id, maps.id), reorderFavorites(ids, listOf(camera.id, clock.id, maps.id)))
+        assertEquals(listOf(maps.id, camera.id, clock.id), reorderFavorites(ids, listOf(maps.id, camera.id, clock.id)))
+    }
+
+    @Test fun reorderingVisibleFavoritesPreservesUnavailableAppsInTheirSavedSlots() {
+        val workClock = clock.copy(profileSerial = 42)
+        val ids = listOf(clock.id, workClock.id, maps.id, "uninstalled/Main", camera.id)
+        assertEquals(
+            listOf(camera.id, workClock.id, clock.id, "uninstalled/Main", maps.id),
+            reorderFavorites(ids, listOf(camera.id, clock.id, maps.id)),
+        )
+        assertEquals(
+            listOf(workClock.id, clock.id),
+            reorderFavorites(listOf(clock.id, workClock.id), listOf(workClock.id, clock.id)),
+        )
+    }
+
+    @Test fun staleOrDuplicateReorderIdsCannotAddOrRemoveFavorites() {
+        val ids = listOf(clock.id, maps.id, camera.id)
+        assertEquals(listOf(camera.id, maps.id, clock.id), reorderFavorites(ids, listOf("removed/Main", camera.id, camera.id, clock.id)))
+        assertEquals(ids, reorderFavorites(ids, emptyList()))
+        assertEquals(emptyList<String>(), reorderFavorites(emptyList(), ids))
+    }
+
     @Test fun missingAppsAreNotShownButReturnInTheirSavedPositionOnReinstall() {
         val ids = listOf(maps.id, clock.id)
         assertEquals(listOf(clock), favoriteApps(listOf(clock, camera), ids))

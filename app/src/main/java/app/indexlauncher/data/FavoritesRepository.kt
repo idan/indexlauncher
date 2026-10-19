@@ -1,6 +1,7 @@
 package app.indexlauncher.data
 
 import android.content.Context
+import app.indexlauncher.model.reorderFavorites
 import app.indexlauncher.model.toggleFavorite
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +17,15 @@ class FavoritesRepository(context: Context) {
     }
 
     fun toggle(appId: String) {
-        val updated = toggleFavorite(_ids.value, appId)
+        save(toggleFavorite(_ids.value, appId))
+    }
+
+    fun reorder(orderedIds: List<String>) {
+        save(reorderFavorites(_ids.value, orderedIds))
+    }
+
+    private fun save(updated: List<String>) {
+        if (updated == _ids.value) return
         // Component names cannot contain newlines; storing a list instead of a set preserves order.
         prefs.edit().putString("ordered_ids", updated.joinToString("\n")).apply()
         _ids.value = updated

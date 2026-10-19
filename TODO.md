@@ -4,7 +4,6 @@ Only incomplete implementation and validation work belongs here. Completed work 
 
 ## Implementation
 
-- [ ] Add direct favorite reordering while preserving saved order and distinct personal/work app identities.
 - [ ] Implement private-space discovery and a separate section/lock control, initially on API 36+ under the default-Home role. Do not mix private apps into ordinary A–Z sections.
 - [ ] Implement private-space privacy across lists, favorites, search, and caches, including lock/unlock, availability changes, the system's hidden-entrypoint preference, and a “private space” unlock search result without exposing locked app details. See the [private-space design](docs/platform-decisions.md#private-space-planned).
 - [ ] Add third-party icon-pack discovery, a persistent settings picker, common `appfilter.xml` mappings, and original-icon fallback for missing mappings, load failures, or pack removal. Decide supported formats and shape/pack precedence first; see [icon-pack design](docs/platform-decisions.md#icon-packs-planned).

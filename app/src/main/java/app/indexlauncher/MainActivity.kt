@@ -165,6 +165,7 @@ class MainActivity : ComponentActivity() {
                                 onRailInteraction = onRailInteraction,
                                 onScrimOpacityChange = onScrimOpacityChange,
                                 onToggleFavorite = favorites::toggle,
+                                onReorderFavorites = favorites::reorder,
                                 onAppClick = ::launchApp,
                                 onOpenSettings = { startActivity(Intent(this@MainActivity, SettingsActivity::class.java)) },
                                 onLoadIcon = viewModel::loadIcon,

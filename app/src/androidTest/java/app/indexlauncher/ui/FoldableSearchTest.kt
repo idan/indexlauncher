@@ -62,6 +62,7 @@ class FoldableSearchTest {
                                 onRailInteraction = onRailInteraction,
                                 onScrimOpacityChange = onScrimOpacityChange,
                                 onToggleFavorite = {},
+                                onReorderFavorites = {},
                                 onAppClick = {},
                                 onOpenSettings = {},
                                 onLoadIcon = { _, _, _ -> null },

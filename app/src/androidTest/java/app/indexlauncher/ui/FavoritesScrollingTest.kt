@@ -248,6 +248,7 @@ class FavoritesScrollingTest {
                         onRailInteraction = {},
                         onScrimOpacityChange = {},
                         onToggleFavorite = {},
+                        onReorderFavorites = {},
                         onAppClick = {},
                         onOpenSettings = {},
                         onLoadIcon = { _, _, _ -> null },

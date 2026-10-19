@@ -6,6 +6,7 @@ Completed work is recorded here; pending work lives in [TODO.md](TODO.md). This 
 
 ### Apps and navigation
 
+- Added long-press drag reordering for favorites, with a lifted-row preview, haptic feedback, edge auto-scroll, and accessible move-up/down actions. Drops persist the chosen order while preserving unavailable and distinct personal/work favorites; canceled drags leave the saved order unchanged.
 - Android’s Home button/gesture now returns directly to favorites from all apps, search, or compact widget pages, without resetting the view on ordinary resumes or replaying the action after recreation. Home and selecting `★` also reset favorites to the very top, including offsets inside oversized home widgets.
 - Made Home favorites-first, with a bottom-aligned vertical list and persistent insertion order. Left-swipe star actions add/remove favorites in Home, all apps, and search, with an accessibility equivalent.
 - Added tap/scrub alphabetical navigation with a finger-following target bubble, populated-letter filtering, a `#` fallback, and sticky letter pills. The star and Back return to favorites; the gear jumps to launcher tools rather than opening settings directly.

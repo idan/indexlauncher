@@ -8,3 +8,12 @@ fun favoriteApps(apps: List<AppEntry>, favoriteIds: List<String>): List<AppEntry
 
 fun toggleFavorite(favoriteIds: List<String>, appId: String): List<String> =
     if (appId in favoriteIds) favoriteIds.filterNot { it == appId } else favoriteIds + appId
+
+/** Reorder the supplied favorites without dropping unavailable apps or changing their saved slots. */
+fun reorderFavorites(favoriteIds: List<String>, orderedIds: List<String>): List<String> {
+    val existing = favoriteIds.toSet()
+    val reordered = orderedIds.filter { it in existing }.distinct()
+    val included = reordered.toSet()
+    val next = reordered.iterator()
+    return favoriteIds.map { if (it in included) next.next() else it }
+}

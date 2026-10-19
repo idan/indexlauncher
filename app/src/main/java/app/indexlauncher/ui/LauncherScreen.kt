@@ -62,6 +62,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -79,6 +80,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import app.indexlauncher.R
 import app.indexlauncher.model.AppEntry
 import app.indexlauncher.model.IconShape
@@ -112,6 +114,7 @@ fun LauncherScreen(
     onRailInteraction: () -> Unit,
     onScrimOpacityChange: (Float) -> Unit,
     onToggleFavorite: (String) -> Unit,
+    onReorderFavorites: (List<String>) -> Unit,
     onAppClick: (AppEntry) -> Unit,
     onOpenSettings: () -> Unit,
     onLoadIcon: suspend (AppEntry, Int, IconShape) -> Bitmap?,
@@ -132,6 +135,14 @@ fun LauncherScreen(
     val railTargets = remember(sections) { alphabetRailTargets(sections) }
     val jumpPositions = remember(sections) { sectionJumpPositions(sections) }
     val favoritesListState = rememberLazyListState()
+    val favoriteReorder = rememberFavoriteReorderState(favoritesListState)
+    val favoriteKeys = remember(favorites) { favorites.map { it.id } }
+    val favoritesById = remember(favorites) { favorites.associateBy { it.id } }
+    val displayedFavorites = favoriteReorder.order?.mapNotNull(favoritesById::get) ?: favorites
+    val haptics = LocalHapticFeedback.current
+    val density = LocalDensity.current
+    val moveUpLabel = stringResource(R.string.move_favorite_up)
+    val moveDownLabel = stringResource(R.string.move_favorite_down)
     val allAppsListState = rememberLazyListState()
     var homeEditing by rememberSaveable { mutableStateOf(false) }
     var allAppsVisible by rememberSaveable { mutableStateOf(false) }
@@ -143,6 +154,7 @@ fun LauncherScreen(
 
     fun showFavorites(collapseRail: Boolean = true) {
         // Reset even when already on favorites, including offsets inside an oversized widget.
+        favoriteReorder.finish()
         favoritesListState.requestScrollToItem(0)
         allAppsVisible = false
         searchVisible = false
@@ -188,8 +200,9 @@ fun LauncherScreen(
     }
 
     // Home editing must still handle Back when its lazy widget header is offscreen.
-    BackHandler(enabled = active && (searchVisible || allAppsVisible || openRowId != null || homeEditing)) {
+    BackHandler(enabled = active && (searchVisible || allAppsVisible || openRowId != null || homeEditing || favoriteReorder.draggedId != null)) {
         when {
+            favoriteReorder.draggedId != null -> favoriteReorder.finish()
             searchVisible -> searchVisible = false
             openRowId != null -> openRowId = null
             allAppsVisible -> {
@@ -217,6 +230,17 @@ fun LauncherScreen(
         LazyColumn(
             state = favoritesListState,
             modifier = Modifier.fillMaxSize()
+                .reorderFavorites(
+                    state = favoriteReorder,
+                    ids = favoriteKeys,
+                    enabled = active && !homeEditing,
+                    endInsetPx = with(density) { (if (hasRail) railWidth else 0.dp).toPx() },
+                    onStart = {
+                        openRowId = null
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    },
+                    onDrop = { if (it != favoriteKeys) onReorderFavorites(it) },
+                )
                 .semantics {
                     customActions = listOf(CustomAccessibilityAction(editWidgetLabel) {
                         homeEditing = true
@@ -254,8 +278,28 @@ fun LauncherScreen(
                     }
                 }
             }
-            items(favorites, key = { it.id }) { app ->
-                Box(favoriteModifier) {
+            items(displayedFavorites, key = { it.id }) { app ->
+                val dragging = favoriteReorder.draggedId == app.id
+                val index = favoriteKeys.indexOf(app.id)
+                val moveActions = buildList {
+                    fun moveTo(target: Int): Boolean {
+                        openRowId = null
+                        onReorderFavorites(favoriteKeys.toMutableList().apply { add(target, removeAt(index)) })
+                        return true
+                    }
+                    if (index > 0) add(CustomAccessibilityAction(moveUpLabel) { moveTo(index - 1) })
+                    if (index < favoriteKeys.lastIndex) add(CustomAccessibilityAction(moveDownLabel) { moveTo(index + 1) })
+                }
+                Box(
+                    favoriteModifier
+                        .zIndex(if (dragging) 1f else 0f)
+                        .then(if (dragging) Modifier else Modifier.animateItem())
+                        .graphicsLayer { translationY = favoriteReorder.translation(app.id) }
+                        .then(if (dragging) Modifier
+                            .shadow(8.dp, MaterialTheme.shapes.medium)
+                            .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.medium)
+                        else Modifier),
+                ) {
                     AppRow(
                         app = app,
                         catalogVersion = state.iconCatalogVersion,
@@ -268,6 +312,7 @@ fun LauncherScreen(
                         onReveal = { openRowId = it },
                         onToggleFavorite = onToggleFavorite,
                         onClick = onAppClick,
+                        accessibilityActions = moveActions,
                     )
                 }
             }

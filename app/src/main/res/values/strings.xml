@@ -82,6 +82,8 @@
     <string name="no_search_results">No matching apps</string>
     <string name="add_favorite">Add to favorites</string>
     <string name="remove_favorite">Remove from favorites</string>
+    <string name="move_favorite_up">Move favorite up</string>
+    <string name="move_favorite_down">Move favorite down</string>
     <string name="load_error">Couldn’t load apps</string>
     <string name="retry">Retry</string>
     <string name="launch_error">Couldn’t open app</string>

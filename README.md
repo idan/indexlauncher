@@ -4,7 +4,7 @@ Index Launcher is a vertical **list launcher** for Android, inspired by Niagara 
 
 ## Features
 
-- **Favorites first.** A bottom-aligned list of your everyday apps, with a swipe-to-star action for adding and removing favorites. Longer lists scroll; your chosen favorites persist across restarts.
+- **Favorites first.** A bottom-aligned list of your everyday apps, with a swipe-to-star action for adding and removing favorites. Long-press and drag to reorder; longer lists scroll, and your chosen order persists across restarts.
 - **Fast alphabetical access.** Tap or scrub the A–Z rail to jump through all apps, with a target bubble that follows your finger and a subtle haptic tick for each new entry while scrubbing. Only populated letters appear. Non-Latin app names keep their original labels, with romanized indexing and search aliases where available.
 - **Search on demand.** Use the search button in all apps to open focused, keyboard-ready app search. Scrolling favorites never opens search, and there is no permanent search box on Home.
 - **Widgets without an icon grid.** Place widgets above favorites or on up to five pages to the left. Mix full-width widgets with pairs of half-width widgets; resize, reorder, and remove them in Edit mode. Hiding a page retains its widgets.
@@ -13,7 +13,7 @@ Index Launcher is a vertical **list launcher** for Android, inspired by Niagara 
 - **Personal and work apps.** Available work apps appear alongside personal apps with badged icons and separate favorites. Pausing a work profile hides its apps without forgetting those favorites.
 - **Wallpaper-forward appearance.** Static and live system wallpaper show through Home and widget pages. All apps and search add contrast for readability. Choose Device default, Circle, Rounded square, or Squircle for adaptive app icons; legacy artwork stays intact.
 
-Index Launcher is in development and supports **Android 15+ (API 35)**. Private space, third-party icon packs, and direct favorite reordering are **not implemented**; see the [active backlog](TODO.md).
+Index Launcher is in development and supports **Android 15+ (API 35)**. Private space and third-party icon packs are **not implemented**; see the [active backlog](TODO.md).
 
 ## Using the launcher
 
@@ -22,6 +22,7 @@ Index Launcher is in development and supports **Android 15+ (API 35)**. Private 
 | Browse all apps | Touch or scrub the rail on the right edge. Letters jump to sections; `#` covers numbers and names without a Latin index initial. |
 | Return to favorites | Use Android’s Home button/swipe-up gesture, scrub to `★`, or press Back in all apps. Home and `★` reset the shared widgets/favorites list to the top, even if already showing favorites. Back closes a revealed app row first. |
 | Add/remove a favorite | Swipe left on an app row, then tap its star. This works in favorites, all apps, and search. |
+| Reorder favorites | Long-press a favorite, drag it up or down, then release to save. Hold near the top or bottom edge to scroll longer lists. Back cancels a drag; accessibility actions can move favorites up or down without dragging. |
 | Search | Tap the magnifying glass in all apps. Back or the close arrow returns to the previous view; Back may first dismiss the keyboard. |
 | Open settings | Use the gear at the bottom of the rail to jump to the launcher tools, then tap **Index Launcher settings**. The gear does not open settings directly. |
 | Edit widgets above favorites | Tap **Homescreen Widgets** below the settings tile in all apps. Use Add widget and Done; home long-presses do not open the editor. |

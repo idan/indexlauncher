@@ -81,6 +81,7 @@ fun AppRow(
     onToggleFavorite: (String) -> Unit,
     onClick: (AppEntry) -> Unit,
     itemSpacing: ItemSpacing = ItemSpacing.Default,
+    accessibilityActions: List<CustomAccessibilityAction> = emptyList(),
 ) {
     val rowHeight = itemSpacing.rowHeightDp.dp
     val bitmap by produceState<Bitmap?>(null, app.id, catalogVersion, iconShape) {
@@ -192,7 +193,7 @@ fun AppRow(
                         toggle(app.id)
                         reveal(null)
                         true
-                    })
+                    }) + accessibilityActions
                 }
                 .padding(horizontal = 24.dp, vertical = itemSpacing.paddingDp.dp),
             verticalAlignment = Alignment.CenterVertically,
