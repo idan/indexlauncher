@@ -12,6 +12,7 @@ Only incomplete implementation and validation work belongs here. Completed work 
 
 ## Validation and release checks
 
+- [ ] Verify the first development-key-signed GitHub build and a subsequent higher-version build on a phone: confirm in-place installation retains favorites/settings/widgets, then promote a prerelease and verify a workflow retry leaves its APK and release status unchanged.
 - [ ] Test current favorites, search/keyboard/Back transitions, rail timing/haptics, row gestures vs paging, widget editing, persistence, and accessibility on API 35, 36, and 37 devices/emulators. Add instrumentation/state-transition coverage where practical; JVM tests do not cover Android UI integration.
 - [ ] Validate real-device fold/unfold transitions (favorites, all apps, search/IME and scroll position), off-center/occluding hinges, tabletop/rotation, split-screen, large font/display settings, widget provider reflow, TalkBack, and simultaneous app/widget Back handling. API 37 fold-emulator tests cover synthetic pane resizing and saved-state restoration; a manual outer/inner display search/IME round trip also preserved the query. This is not full hardware/provider coverage.
 - [ ] Visually check all implemented icon shapes on light/dark wallpapers, including legacy icons and personal/work badges. When packs/private space land, verify their artwork and badge fallbacks too.

@@ -66,11 +66,36 @@ With an emulator or device connected, run the gesture, rail-haptic, adaptive-pan
 
 ### Download a CI build
 
-Every push to `main` builds a debug APK with [GitHub Actions](https://github.com/idan/indexlauncher/actions/workflows/build-apk.yml). Open a successful **Build debug APK** run and download the `index-launcher-debug-<commit>` artifact, then unzip it to get `app-debug.apk`. Artifacts are retained for 14 days. You can also start a build using **Run workflow** on the workflow page.
+Every push to `main` runs unit tests and lint, builds a signed debug APK with [GitHub Actions](https://github.com/idan/indexlauncher/actions/workflows/build-apk.yml), and publishes a [GitHub prerelease](https://github.com/idan/indexlauncher/releases). Download `app-debug.apk` directly from a release's assets. You can also start a new build using **Run workflow** with the `main` branch selected; other branches do not sign or publish builds.
 
-Each successful build also attaches `app-debug.apk` to a [draft release](https://github.com/idan/indexlauncher/releases) whose title and tag are `dev-<SHA>`, where `<SHA>` is the **last six characters** of the built commit's SHA. Re-running the same commit replaces the APK on its existing draft. Draft releases are visible only to users with write access until published.
+Build **N** uses the workflow run number as its Android `versionCode`, the version name `0.1.0-dev.N+<short-commit>`, and the tag `dev-N`. A new workflow run gets a higher number even when building the same commit; retrying an existing run keeps its number. This counter belongs to this workflow, not the whole repository: replacing the workflow requires preserving increasing version codes, for example with an offset.
 
-CI builds use a runner-generated debug signing key, so installing a build from a later run may require uninstalling the previous CI build first (which deletes its app data). These are development builds, not signed release builds.
+Retries can resume an incomplete draft, but never replace an already-published release's APK or change its release status. Releases are published only after the APK upload succeeds. A successful build also uploads an `index-launcher-debug-<run-number>-<attempt>` Actions artifact containing the APK, retained for 14 days.
+
+CI builds use a persistent development signing key, allowing newer CI builds to update older ones in place while retaining app data. **Switching from an old runner-signed or differently signed local build requires a one-time uninstall, which deletes app data.** Keep another launcher installed while testing. These are debuggable development APKs using `app.indexlauncher.debug`, not production builds.
+
+### Signing configuration
+
+The workflow requires these repository Actions secrets:
+
+| Secret | Value |
+| --- | --- |
+| `DEV_KEYSTORE_BASE64` | Base64-encoded PKCS12 keystore containing the development private key |
+| `DEV_KEYSTORE_PASSWORD` | Keystore password |
+| `DEV_KEY_ALIAS` | Key alias, normally `indexlauncher-dev` |
+| `DEV_KEY_PASSWORD` | Key password (the same password for this PKCS12 setup) |
+
+Keep the original keystore and password backed up securely outside GitHub. CI decodes the key into a restricted-permission temporary file and removes it after the build; neither the key nor its credentials belong in Git or build artifacts. Missing signing secrets fail the build rather than publishing an APK with a new runner-generated key.
+
+Ordinary local builds still use Android's default local debug key, version code `1`, and version name `0.1.0`. To build an APK compatible with CI installations, explicitly export `DEV_KEYSTORE_PATH` (the absolute path to the backed-up `.p12` file), `DEV_KEYSTORE_PASSWORD`, `DEV_KEY_ALIAS`, and `DEV_KEY_PASSWORD`, and pass `-PciVersionCode=N` with a code no lower than the installed build's. An optional `-PciVersionNameSuffix=-dev.N+<short-commit>` identifies the build. All four signing variables must be supplied together. Do not use an arbitrarily high local version code: later CI builds must catch up before they can update it.
+
+### Promote a tested build
+
+On GitHub, edit the chosen prerelease and clear **This is a pre-release**. You can also select **Set as the latest release**. Leave the tag and APK unchanged: promotion blesses the exact tested build, and retries will not demote it or overwrite its APK.
+
+Promotion changes GitHub metadata only. The APK retains its development version name, signing key, debug package ID, and debuggable status. A future production app needs a separate production build/signing setup. Promoting an older build also does not make it an Android upgrade over a newer installed build; version codes still determine update ordering.
+
+The launcher does not yet check for or install updates itself. External tools tracking this development channel must include prereleases; GitHub's `/releases/latest` endpoint excludes them.
 
 ## Project documentation
 

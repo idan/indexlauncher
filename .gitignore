@@ -7,3 +7,10 @@ local.properties
 *.iml
 .DS_Store
 /captures/
+
+# Never commit private signing keys.
+*.jks
+*.keystore
+*.p12
+
+__pycache__/
