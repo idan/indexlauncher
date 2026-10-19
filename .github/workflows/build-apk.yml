@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write # Required to create draft releases and attach the APK.
 
 concurrency:
   group: build-apk-${{ github.ref }}
@@ -45,3 +45,24 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="dev-${GITHUB_SHA: -6}"
+          apk="app/build/outputs/apk/debug/app-debug.apk"
+
+          if release=$(gh release view "$tag" --json isDraft,targetCommitish 2>/dev/null); then
+            if ! jq -e --arg sha "$GITHUB_SHA" '.isDraft and .targetCommitish == $sha' <<< "$release" >/dev/null; then
+              echo "::error::Release $tag already exists and is not a draft for this commit."
+              exit 1
+            fi
+            gh release upload "$tag" "$apk" --clobber
+          else
+            gh release create "$tag" "$apk" \
+              --draft \
+              --title "$tag" \
+              --target "$GITHUB_SHA" \
+              --notes "Development debug APK built from commit ${GITHUB_SHA}."
+          fi

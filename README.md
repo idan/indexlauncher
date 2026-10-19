@@ -64,6 +64,8 @@ With an emulator or device connected, run the gesture, rail-haptic, adaptive-pan
 
 Every push to `main` builds a debug APK with [GitHub Actions](https://github.com/idan/indexlauncher/actions/workflows/build-apk.yml). Open a successful **Build debug APK** run and download the `index-launcher-debug-<commit>` artifact, then unzip it to get `app-debug.apk`. Artifacts are retained for 14 days. You can also start a build using **Run workflow** on the workflow page.
 
+Each successful build also attaches `app-debug.apk` to a [draft release](https://github.com/idan/indexlauncher/releases) whose title and tag are `dev-<SHA>`, where `<SHA>` is the **last six characters** of the built commit's SHA. Re-running the same commit replaces the APK on its existing draft. Draft releases are visible only to users with write access until published.
+
 CI builds use a runner-generated debug signing key, so installing a build from a later run may require uninstalling the previous CI build first (which deletes its app data). These are development builds, not signed release builds.
 
 ## Project documentation
