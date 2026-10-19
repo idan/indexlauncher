@@ -27,6 +27,7 @@ Completed work is recorded here; pending work lives in [TODO.md](TODO.md). This 
 
 ### Appearance and project setup
 
+- Added persistent development signing and workflow-run-number versions for CI APKs, with automatic GitHub prereleases, retry-safe draft uploads, and preservation of published/promoted builds. Local builds retain their default debug signing and version unless explicitly configured.
 - Added saved widget-spacing controls for outside padding and independent row/column gaps (0–40 dp), shared by home widgets and left-side widget pages without changing provider-internal padding.
 - Added saved item-spacing controls for favorites, all apps, and search (4–28 dp vertical padding, keeping icons fixed-size and touch targets at least 48 dp).
 - Displayed static/live system wallpaper without pixel access or storage permissions. Favorites and widget pages stay undimmed; all apps/search use a contrast scrim. Rail idle fade, return-home fade, and paging suppression keep navigation unobtrusive.

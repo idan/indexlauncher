@@ -7,6 +7,7 @@ This document separates **implemented decisions** from **planned features**. [La
 **Implemented:**
 
 - `app/build.gradle.kts` sets `minSdk = 35` and `compileSdk = targetSdk = 37`. API 37 is not a support ceiling. The release application ID is `app.indexlauncher`; debug adds `.debug` so both builds can coexist. Preserve the release ID once published.
+- CI development APKs use a persistent PKCS12 signing key from Actions secrets, workflow-run-number version codes, and published `dev-N` prereleases. Published assets are not overwritten on retries; GitHub promotion does not turn a debug APK into a production build. Local builds retain their default debug key/version unless explicitly configured. See [build distribution and signing](../README.md#download-a-ci-build).
 - The Gradle wrapper selects a JDK 25 daemon through `gradle/gradle-daemon-jvm.properties`; Java source/target compatibility is 17. These are separate settings, not interchangeable build requirements.
 - The manifest declares HOME/DEFAULT and LAUNCHER entry points, a non-exported settings activity, and narrow package queries for launchable activities **and widget providers** (`APPWIDGET_UPDATE`). No `QUERY_ALL_PACKAGES` permission. Backup is disabled in the manifest.
 - `InstalledAppsRepository` uses `LauncherApps` for the current user and accessible **managed profiles**, excluding paused profiles and other profile types. Work icons are badged. Launch targets, favorites, search rows, and icon-cache keys distinguish profiles; current-user component IDs retain their old format for saved favorites.
