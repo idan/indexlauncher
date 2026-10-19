@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import app.indexlauncher.R
 import app.indexlauncher.model.AppEntry
 import app.indexlauncher.model.IconShape
+import app.indexlauncher.model.ItemSpacing
 import app.indexlauncher.model.searchApps
 import kotlinx.coroutines.flow.drop
 
@@ -53,6 +54,7 @@ fun SearchScreen(
     onAppClick: (AppEntry) -> Unit,
     onDismiss: () -> Unit,
     active: Boolean = true,
+    itemSpacing: ItemSpacing = ItemSpacing.Default,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var openRowId by remember { mutableStateOf<String?>(null) }
@@ -120,6 +122,7 @@ fun SearchScreen(
                     app = app,
                     catalogVersion = catalogVersion,
                     iconShape = iconShape,
+                    itemSpacing = itemSpacing,
                     loadIcon = loadIcon,
                     isFavorite = app.id in favoriteIds,
                     showLabelShadow = false,

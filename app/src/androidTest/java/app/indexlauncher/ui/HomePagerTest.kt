@@ -50,6 +50,27 @@ class HomePagerTest {
     private var expanded by mutableStateOf(false)
     private var count by mutableIntStateOf(2)
     private var rtl by mutableStateOf(false)
+    private var homeRequest by mutableIntStateOf(0)
+
+    @Test fun homeRequestReturnsFromWidgetsToAppsWithoutResettingAppState() {
+        showHome()
+        compose.onNodeWithText("Increment").performClick()
+        compose.onNodeWithTag("app-row").performTouchInput { swipeRight() }
+        compose.onNodeWithText("Widget 1").assertIsDisplayed()
+        compose.runOnIdle { homeRequest++ }
+        compose.onNodeWithText("App state 1").assertIsDisplayed()
+    }
+
+    @Test fun homeRequestInWideLayoutKeepsSelectedWidgetPage() {
+        requireWideWindow()
+        expanded = true
+        showHome()
+        compose.onNodeWithTag("widget-1").performTouchInput { swipeRight() }
+        compose.onNodeWithText("Widget 2").assertIsDisplayed()
+        compose.runOnIdle { homeRequest++ }
+        compose.onNodeWithText("Widget 2").assertIsDisplayed()
+        compose.onNodeWithText("App state 0").assertIsDisplayed()
+    }
 
     @Test fun rightwardRowDragPagesLeftAndLeftwardWidgetDragReturnsToApps() {
         showHome()
@@ -168,6 +189,7 @@ class HomePagerTest {
                 Box(Modifier.width(if (expanded) 760.dp else 360.dp).height(650.dp)) {
                     HomePager(
                         counts = PageCounts(count),
+                        homeRequest = homeRequest,
                         appPage = { _, _, _, _ ->
                             var value by rememberSaveable { mutableIntStateOf(0) }
                             var query by rememberSaveable { mutableStateOf("") }

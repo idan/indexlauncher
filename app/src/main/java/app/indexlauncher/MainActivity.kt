@@ -40,10 +40,12 @@ import app.indexlauncher.data.AppIconRepository
 import app.indexlauncher.data.FavoritesRepository
 import app.indexlauncher.data.IconShapeRepository
 import app.indexlauncher.data.InstalledAppsRepository
+import app.indexlauncher.data.ItemSpacingRepository
 import app.indexlauncher.data.PageSettingsRepository
 import app.indexlauncher.data.WidgetCatalogRepository
 import app.indexlauncher.data.WidgetPlacementRepository
 import app.indexlauncher.data.WidgetProvider
+import app.indexlauncher.data.WidgetSpacingRepository
 import app.indexlauncher.data.userHandle
 import app.indexlauncher.model.AppEntry
 import app.indexlauncher.model.HomePage
@@ -65,6 +67,7 @@ private const val PENDING_WIDGET_PAGE = "pending_widget_page"
 private const val PENDING_WIDGET_PROVIDER = "pending_widget_provider"
 private const val PENDING_WIDGET_PROFILE = "pending_widget_profile"
 private const val GALLERY_PAGE = "gallery_page"
+private const val HOME_REQUEST = "home_request"
 
 class MainActivity : ComponentActivity() {
     private val viewModel: LauncherViewModel by viewModels {
@@ -79,6 +82,8 @@ class MainActivity : ComponentActivity() {
     }
     private val pageSettings by lazy { PageSettingsRepository(applicationContext) }
     private val iconShapes by lazy { IconShapeRepository(applicationContext) }
+    private val itemSpacing by lazy { ItemSpacingRepository(applicationContext) }
+    private val widgetSpacing by lazy { WidgetSpacingRepository(applicationContext) }
     private val widgetPlacements by lazy { WidgetPlacementRepository(applicationContext) }
     private val widgetCatalog by lazy { WidgetCatalogRepository(applicationContext) }
     private val favorites by lazy { FavoritesRepository(applicationContext) }
@@ -91,6 +96,7 @@ class MainActivity : ComponentActivity() {
     private var pendingProvider: ComponentName? = null
     private var pendingProfileSerial: Long? = null
     private var galleryPage by mutableStateOf<String?>(null)
+    private var homeRequest by mutableIntStateOf(0)
     private var selectingWidget by mutableStateOf(false)
     private var widgetCatalogVersion by mutableIntStateOf(0)
     private val appChanges = object : LauncherApps.Callback() {
@@ -113,6 +119,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        homeRequest = savedInstanceState?.getInt(HOME_REQUEST) ?: 0
         pendingWidgetId = savedInstanceState?.getInt(PENDING_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
             ?: AppWidgetManager.INVALID_APPWIDGET_ID
         pendingWidgetPage = savedInstanceState?.getString(PENDING_WIDGET_PAGE)
@@ -137,11 +144,14 @@ class MainActivity : ComponentActivity() {
                 val state = viewModel.uiState.collectAsStateWithLifecycle().value
                 val counts = pageSettings.counts.collectAsStateWithLifecycle().value
                 val iconShape = iconShapes.shape.collectAsStateWithLifecycle().value
+                val spacing = itemSpacing.spacing.collectAsStateWithLifecycle().value
+                val widgetGaps = widgetSpacing.spacing.collectAsStateWithLifecycle().value
                 val widgets = widgetPlacements.widgets.collectAsStateWithLifecycle().value
                 val favoriteIds = favorites.ids.collectAsStateWithLifecycle().value
                 Box(Modifier.fillMaxSize()) {
                     HomePager(
                         counts = counts,
+                        homeRequest = homeRequest,
                         foldingFeatures = foldingFeatures,
                         appPage = { suppressRail, active, onRailInteraction, onScrimOpacityChange ->
                             LauncherScreen(
@@ -159,6 +169,9 @@ class MainActivity : ComponentActivity() {
                                 onOpenSettings = { startActivity(Intent(this@MainActivity, SettingsActivity::class.java)) },
                                 onLoadIcon = viewModel::loadIcon,
                                 iconShape = iconShape,
+                                itemSpacing = spacing,
+                                widgetSpacing = widgetGaps,
+                                homeRequest = homeRequest,
                                 onRetry = viewModel::refreshApps,
                                 onAddHomeWidget = { addWidget(HomePage.Apps.key) },
                                 onRemoveHomeWidget = { id -> removeWidget(HomePage.Apps.key, id) },
@@ -178,6 +191,7 @@ class MainActivity : ComponentActivity() {
                                 page = page,
                                 active = active,
                                 widgets = widgets[page.key].orEmpty(),
+                                spacing = widgetGaps,
                                 host = widgetHost,
                                 manager = widgetManager,
                                 onAddWidget = { addWidget(page.key) },
@@ -204,6 +218,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // Home is delivered to this singleTask activity even when it is already in front.
+        // A normal resume (from an app, Settings, or a widget flow) must preserve the view.
+        if (intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)) {
+            galleryPage = null
+            homeRequest++
+        }
+    }
+
     override fun onStart() {
         super.onStart()
         widgetHost.startListening()
@@ -214,6 +238,8 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         pageSettings.refresh()
         iconShapes.refresh()
+        itemSpacing.refresh()
+        widgetSpacing.refresh()
         widgetPlacements.refresh()
         favorites.refresh()
         viewModel.refreshApps()
@@ -227,6 +253,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt(HOME_REQUEST, homeRequest)
         outState.putInt(PENDING_WIDGET_ID, pendingWidgetId)
         outState.putString(PENDING_WIDGET_PAGE, pendingWidgetPage)
         outState.putString(PENDING_WIDGET_PROVIDER, pendingProvider?.flattenToString())

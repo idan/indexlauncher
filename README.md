@@ -6,7 +6,7 @@ Index Launcher is a vertical **list launcher** for Android, inspired by Niagara 
 
 - **Favorites first.** A bottom-aligned list of your everyday apps, with a swipe-to-star action for adding and removing favorites. Longer lists scroll; your chosen favorites persist across restarts.
 - **Fast alphabetical access.** Tap or scrub the A–Z rail to jump through all apps, with a target bubble that follows your finger and a subtle haptic tick for each new entry while scrubbing. Only populated letters appear. Non-Latin app names keep their original labels, with romanized indexing and search aliases where available.
-- **Search on demand.** Swipe up past the bottom of favorites to open focused, keyboard-ready app search, or use the search button in all apps. No permanent search box on Home.
+- **Search on demand.** Use the search button in all apps to open focused, keyboard-ready app search. Scrolling favorites never opens search, and there is no permanent search box on Home.
 - **Widgets without an icon grid.** Place widgets above favorites or on up to five pages to the left. Mix full-width widgets with pairs of half-width widgets; resize, reorder, and remove them in Edit mode. Hiding a page retains its widgets.
 - **Foldable-friendly Home.** Wide windows show widgets on the left while keeping your current favorites, all-apps, or search view on the right. Folding returns to the app screen; the widget pane remembers its page.
 - **An app-grouped widget gallery.** Browse providers and previews, including available work-profile widgets where administrator policy permits hosting.
@@ -20,15 +20,19 @@ Index Launcher is in development and supports **Android 15+ (API 35)**. Private 
 | Action | How |
 | --- | --- |
 | Browse all apps | Touch or scrub the rail on the right edge. Letters jump to sections; `#` covers numbers and names without a Latin index initial. |
-| Return to favorites | Scrub to `★` or press Back in all apps. Back closes a revealed app row first. |
+| Return to favorites | Use Android’s Home button/swipe-up gesture, scrub to `★`, or press Back in all apps. Home and `★` reset the shared widgets/favorites list to the top, even if already showing favorites. Back closes a revealed app row first. |
 | Add/remove a favorite | Swipe left on an app row, then tap its star. This works in favorites, all apps, and search. |
-| Search | Swipe up **past the end** of favorites, or tap the magnifying glass in all apps. Back or the close arrow returns to the previous view; Back may first dismiss the keyboard. |
+| Search | Tap the magnifying glass in all apps. Back or the close arrow returns to the previous view; Back may first dismiss the keyboard. |
 | Open settings | Use the gear at the bottom of the rail to jump to the launcher tools, then tap **Index Launcher settings**. The gear does not open settings directly. |
 | Edit widgets above favorites | Tap **Homescreen Widgets** below the settings tile in all apps. Use Add widget and Done; home long-presses do not open the editor. |
 | Visit widget pages | Swipe right from the app page. Pages extend only to the left and never wrap. In wide windows, swipe within the left pane to browse widgets independently. Set the page count to **0–5** in settings. |
 | Add/edit a widget on a left-side page | Long-press empty space to open the gallery, or long-press a widget to enter Edit mode. Empty pages also have an Add widget button. |
 
 In widget Edit mode, drag the bottom handle for height or the side handle for half/full width when supported. Arrow controls change order; the trash control asks before removing a widget. Done or Back locks the layout. Providers control their own contents, so giving a widget more space does not guarantee that it will reflow. Home widgets and favorites scroll together in one vertical list, and home widgets temporarily hide in all apps and search.
+
+Under **Settings → Appearance → Item spacing**, adjust the vertical padding above and below app icons (4–28 dp, default 12 dp). The saved setting applies to favorites, all apps, and search; icons stay the same size and compact rows retain a 48 dp touch target.
+
+**Settings → Appearance → Widget spacing** independently adjusts outside padding, gaps between columns, and gaps between rows (each 0–40 dp). Defaults remain 20, 12, and 16 dp respectively. These settings apply above favorites and on every widget page; padding drawn inside a widget is still controlled by its app.
 
 Settings also opens Android's wallpaper picker. Index Launcher displays the system wallpaper without reading its pixels or requesting storage permissions. Its icon shape choice applies only inside this launcher, not to other launchers or the device's shape picker.
 
