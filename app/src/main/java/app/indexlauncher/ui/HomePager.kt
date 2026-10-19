@@ -75,12 +75,14 @@ fun HomePager(
     ) -> Unit,
     widgetPage: @Composable (HomePage.Widgets, active: Boolean) -> Unit,
     foldingFeatures: List<FoldingFeature> = emptyList(),
+    homeRequest: Int = 0,
 ) {
     var compactOrdinal by rememberSaveable { mutableIntStateOf(0) }
     var widgetOrdinal by rememberSaveable { mutableIntStateOf(1) }
     var wasExpanded by rememberSaveable { mutableStateOf(false) }
     var awaitingRailInteraction by rememberSaveable { mutableStateOf(false) }
     var appScrimOpacity by remember { mutableFloatStateOf(0f) }
+    var handledHomeRequest by rememberSaveable { mutableIntStateOf(0) }
     val widgetStateHolder = rememberSaveableStateHolder()
     val latestWidgetPage by rememberUpdatedState(widgetPage)
     val widgetContents = remember {
@@ -141,6 +143,13 @@ fun HomePager(
                         awaitingRailInteraction = true
                     }
                 }
+            }
+        }
+        LaunchedEffect(pager, homeRequest) {
+            if (homeRequest != handledHomeRequest) {
+                if (!expanded) pager.scrollToPage(counts.appsIndex)
+                awaitingRailInteraction = false
+                handledHomeRequest = homeRequest
             }
         }
         SideEffect {

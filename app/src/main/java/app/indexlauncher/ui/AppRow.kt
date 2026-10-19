@@ -60,10 +60,10 @@ import androidx.compose.ui.unit.dp
 import app.indexlauncher.R
 import app.indexlauncher.model.AppEntry
 import app.indexlauncher.model.IconShape
+import app.indexlauncher.model.ItemSpacing
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
-private val rowHeight = 64.dp
 private val actionWidth = 80.dp
 private val revealAnimation = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
 
@@ -80,7 +80,9 @@ fun AppRow(
     onReveal: (String?) -> Unit,
     onToggleFavorite: (String) -> Unit,
     onClick: (AppEntry) -> Unit,
+    itemSpacing: ItemSpacing = ItemSpacing.Default,
 ) {
+    val rowHeight = itemSpacing.rowHeightDp.dp
     val bitmap by produceState<Bitmap?>(null, app.id, catalogVersion, iconShape) {
         value = loadIcon(app, catalogVersion, iconShape)
     }
@@ -192,7 +194,7 @@ fun AppRow(
                         true
                     })
                 }
-                .padding(horizontal = 24.dp, vertical = 10.dp),
+                .padding(horizontal = 24.dp, vertical = itemSpacing.paddingDp.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (image != null) {
@@ -200,12 +202,12 @@ fun AppRow(
                     bitmap = image,
                     contentDescription = null,
                     // AppIconRepository applies either the device mask or Index Launcher's selected mask.
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(ItemSpacing.ICON_SIZE_DP.dp),
                 )
             } else {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(ItemSpacing.ICON_SIZE_DP.dp)
                         .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(10.dp))
                         .clearAndSetSemantics { },
                     contentAlignment = Alignment.Center,

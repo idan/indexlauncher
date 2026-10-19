@@ -14,6 +14,15 @@
     <string name="icon_shape_circle">Circle</string>
     <string name="icon_shape_rounded_square">Rounded square</string>
     <string name="icon_shape_squircle">Squircle</string>
+    <string name="item_spacing_title">Item spacing</string>
+    <string name="item_spacing_description">Adjust vertical padding in favorites, all apps, and search results.</string>
+    <string name="item_spacing_value">%1$d dp above and below each item</string>
+    <string name="widget_spacing_title">Widget spacing</string>
+    <string name="widget_spacing_description">Applies above favorites and on widget screens. Padding inside widgets is controlled by their apps.</string>
+    <string name="widget_outer_padding">Outside padding</string>
+    <string name="widget_column_gap">Between columns</string>
+    <string name="widget_row_gap">Between rows</string>
+    <string name="widget_spacing_value">%1$s: %2$d dp</string>
     <string name="widget_screens_title">Widget screens</string>
     <string name="widget_screens_description">Add up to five widget screens to the left of your favorites. Swipe right to visit them; there is no wraparound. Wide windows show widgets on the left and keep favorites on the right.</string>
     <string name="widget_pages_title">Left of favorites</string>

@@ -10,13 +10,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.indexlauncher.data.IconShapeRepository
+import app.indexlauncher.data.ItemSpacingRepository
 import app.indexlauncher.data.PageSettingsRepository
+import app.indexlauncher.data.WidgetSpacingRepository
 import app.indexlauncher.ui.SettingsScreen
 import app.indexlauncher.ui.theme.IndexLauncherSettingsTheme
 
 class SettingsActivity : ComponentActivity() {
     private val pageSettings by lazy { PageSettingsRepository(applicationContext) }
     private val iconShapes by lazy { IconShapeRepository(applicationContext) }
+    private val itemSpacing by lazy { ItemSpacingRepository(applicationContext) }
+    private val widgetSpacing by lazy { WidgetSpacingRepository(applicationContext) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +32,10 @@ class SettingsActivity : ComponentActivity() {
                 SettingsScreen(
                     counts = counts,
                     iconShape = iconShape,
+                    itemSpacing = itemSpacing.spacing.collectAsStateWithLifecycle().value,
+                    onItemSpacingChange = itemSpacing::setSpacing,
+                    widgetSpacing = widgetSpacing.spacing.collectAsStateWithLifecycle().value,
+                    onWidgetSpacingChange = widgetSpacing::setSpacing,
                     onIconShapeChange = iconShapes::setShape,
                     onLeftCountChange = pageSettings::setLeft,
                     onChooseWallpaper = ::chooseWallpaper,
@@ -41,6 +49,8 @@ class SettingsActivity : ComponentActivity() {
         super.onResume()
         pageSettings.refresh()
         iconShapes.refresh()
+        itemSpacing.refresh()
+        widgetSpacing.refresh()
     }
 
     private fun chooseWallpaper() {

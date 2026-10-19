@@ -78,6 +78,7 @@ import app.indexlauncher.R
 import app.indexlauncher.model.HomePage
 import app.indexlauncher.model.WidgetPlacement
 import app.indexlauncher.model.WidgetRow
+import app.indexlauncher.model.WidgetSpacing
 import app.indexlauncher.model.WidgetWidth
 import app.indexlauncher.model.resizedWidgetHeight
 import app.indexlauncher.model.widgetWidthAfterDrag
@@ -85,8 +86,6 @@ import app.indexlauncher.model.widgetHeightRange
 import app.indexlauncher.model.widgetRows
 import kotlin.math.roundToInt
 
-private val columnGap = 12.dp
-private val pagePadding = 20.dp
 private const val ACCESSIBILITY_HEIGHT_STEP_DP = 40
 
 @Composable
@@ -101,10 +100,12 @@ fun WidgetPageScreen(
     onWidthChange: (Int, WidgetWidth) -> Unit,
     onHeightChange: (Int, Int) -> Unit,
     active: Boolean = true,
+    spacing: WidgetSpacing = WidgetSpacing.Default,
 ) {
     var editing by rememberSaveable(page.key) { mutableStateOf(false) }
     WidgetEditor(
         pageKey = page.key,
+        spacing = spacing,
         pageName = stringResource(R.string.widget_page, page.ordinal),
         handleBack = active,
         widgets = widgets,
@@ -133,9 +134,11 @@ fun HomeWidgetRegion(
     onWidthChange: (Int, WidgetWidth) -> Unit,
     onHeightChange: (Int, Int) -> Unit,
     active: Boolean = true,
+    spacing: WidgetSpacing = WidgetSpacing.Default,
 ) {
     WidgetEditor(
         pageKey = HomePage.Apps.key,
+        spacing = spacing,
         pageName = stringResource(R.string.home_widgets),
         widgets = widgets,
         host = host,
@@ -156,6 +159,7 @@ fun HomeWidgetRegion(
 private fun WidgetEditor(
     pageKey: String,
     pageName: String,
+    spacing: WidgetSpacing,
     widgets: List<WidgetPlacement>,
     host: AppWidgetHost,
     manager: AppWidgetManager,
@@ -169,6 +173,9 @@ private fun WidgetEditor(
     isHome: Boolean = false,
     handleBack: Boolean = true,
 ) {
+    val pagePadding = spacing.outerPaddingDp.dp
+    val columnGap = spacing.columnGapDp.dp
+    val rowGap = spacing.rowGapDp.dp
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
     var pendingRemoval by remember { mutableStateOf<Int?>(null) }
@@ -263,7 +270,7 @@ private fun WidgetEditor(
                 Column(
                     Modifier.fillMaxWidth()
                         .padding(horizontal = pagePadding, vertical = pagePadding),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(rowGap),
                 ) {
                     rows.forEach { row -> key(row.first.id) { rowContent(row) } }
                     if (editing) Spacer(Modifier.height(96.dp))
@@ -277,7 +284,7 @@ private fun WidgetEditor(
                         start = pagePadding, end = pagePadding, top = pagePadding,
                         bottom = if (editing) 104.dp else pagePadding,
                     ),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(rowGap),
                 ) {
                     if (widgets.isEmpty()) {
                         item(key = "empty-widgets") {

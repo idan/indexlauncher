@@ -52,6 +52,6 @@ Reference: [Adaptive icon design and masks](https://developer.android.com/develo
 
 ## Validation policy
 
-The existing suite covers JVM models, geometry/overscroll logic, icon-shape persistence parsing, and widget packing/resizing/serialization. UI regression tests cover row/pager arbitration, rail-haptic requests, adaptive panes, search/state restoration, and shared home-widget/favorites scrolling. These tests and prior API 37 emulator checks do not establish complete API 35/36, managed-profile, provider-hosting, accessibility, or real-device foldable coverage. Keep these gaps in [TODO](../TODO.md) rather than treating implementation as release validation.
+The existing suite covers JVM models, geometry/spacing logic, icon-shape persistence parsing, and widget packing/resizing/serialization. UI regression tests cover row/pager arbitration, rail-haptic requests, adaptive panes, search/state restoration, and shared home-widget/favorites scrolling. These tests and prior API 37 emulator checks do not establish complete API 35/36, managed-profile, provider-hosting, accessibility, or real-device foldable coverage. Keep these gaps in [TODO](../TODO.md) rather than treating implementation as release validation.
 
 For each new feature, establish its API floor and visibility/permission requirements first; then specify persistence/cache migrations, unavailable-app/provider/pack fallbacks, focused tests, and on-device gesture/privacy checks. Update the behavior contract, design notes, active backlog, and changelog together.

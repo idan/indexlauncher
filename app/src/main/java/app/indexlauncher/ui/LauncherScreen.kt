@@ -63,7 +63,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -83,7 +82,9 @@ import androidx.compose.ui.unit.sp
 import app.indexlauncher.R
 import app.indexlauncher.model.AppEntry
 import app.indexlauncher.model.IconShape
+import app.indexlauncher.model.ItemSpacing
 import app.indexlauncher.model.WidgetPlacement
+import app.indexlauncher.model.WidgetSpacing
 import app.indexlauncher.model.WidgetWidth
 import app.indexlauncher.model.favoriteApps
 import app.indexlauncher.model.groupAppsByLetter
@@ -96,7 +97,6 @@ private val bubbleSize = 72.dp
 private val bubbleHorizontalDistance = 92.dp
 private const val RAIL_IDLE_DELAY_MS = 3_000L
 private const val RAIL_FADE_DURATION_MS = 300
-private val SEARCH_OVERSCROLL_THRESHOLD = 72.dp
 
 private data class RailScrub(val target: AlphabetRailTarget, val finger: Offset)
 
@@ -123,6 +123,9 @@ fun LauncherScreen(
     onHomeWidgetWidthChange: (Int, WidgetWidth) -> Unit,
     onHomeWidgetHeightChange: (Int, Int) -> Unit,
     active: Boolean = true,
+    itemSpacing: ItemSpacing = ItemSpacing.Default,
+    homeRequest: Int = 0,
+    widgetSpacing: WidgetSpacing = WidgetSpacing.Default,
 ) {
     val sections = remember(state.apps) { groupAppsByLetter(state.apps) }
     val favorites = remember(state.apps, favoriteIds) { favoriteApps(state.apps, favoriteIds) }
@@ -136,14 +139,29 @@ fun LauncherScreen(
     var openRowId by remember { mutableStateOf<String?>(null) }
     var scrub by remember { mutableStateOf<RailScrub?>(null) }
     var railExpanded by remember { mutableStateOf(true) }
-    val searchThresholdPx = with(LocalDensity.current) { SEARCH_OVERSCROLL_THRESHOLD.toPx() }
+    var handledHomeRequest by rememberSaveable { mutableIntStateOf(0) }
+
+    fun showFavorites(collapseRail: Boolean = true) {
+        // Reset even when already on favorites, including offsets inside an oversized widget.
+        favoritesListState.requestScrollToItem(0)
+        allAppsVisible = false
+        searchVisible = false
+        openRowId = null
+        if (collapseRail) railExpanded = false
+    }
+
+    LaunchedEffect(homeRequest) {
+        if (homeRequest != handledHomeRequest) {
+            handledHomeRequest = homeRequest
+            showFavorites()
+            homeEditing = false
+            scrub = null
+        }
+    }
     val openSearch by rememberUpdatedState {
         searchVisible = true
         openRowId = null
         railExpanded = false
-    }
-    val searchGesture = remember(favoritesListState, searchThresholdPx) {
-        FavoritesSearchGesture(favoritesListState, searchThresholdPx) { openSearch() }
     }
     val editWidgetLabel = stringResource(R.string.edit_widgets)
     val fadeSpec = tween<Float>(durationMillis = RAIL_FADE_DURATION_MS, easing = FastOutSlowInEasing)
@@ -198,21 +216,7 @@ fun LauncherScreen(
         val favoriteModifier = Modifier.padding(end = if (hasRail) railWidth else 0.dp)
         LazyColumn(
             state = favoritesListState,
-            modifier = Modifier.fillMaxSize().nestedScroll(searchGesture)
-                .pointerInput(favoritesListState, searchGesture) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false)
-                        // Observe the origin without consuming widget interaction or list/pager drags.
-                        val layoutInfo = favoritesListState.layoutInfo
-                        val widgetItem = layoutInfo.visibleItemsInfo
-                            .firstOrNull { it.key == "home-widgets" }
-                        val widgetTop = widgetItem?.let { it.offset + layoutInfo.beforeContentPadding }
-                        val startedOnWidgets = widgetItem != null && widgetTop != null &&
-                            down.position.y >= widgetTop &&
-                            down.position.y < widgetTop + widgetItem.size
-                        searchGesture.onGestureStart(allowSearch = !startedOnWidgets)
-                    }
-                }
+            modifier = Modifier.fillMaxSize()
                 .semantics {
                     customActions = listOf(CustomAccessibilityAction(editWidgetLabel) {
                         homeEditing = true
@@ -226,6 +230,7 @@ fun LauncherScreen(
                 item(key = "home-widgets") {
                     HomeWidgetRegion(
                         widgets = homeWidgets,
+                        spacing = widgetSpacing,
                         host = widgetHost,
                         manager = widgetManager,
                         editing = homeEditing,
@@ -256,6 +261,7 @@ fun LauncherScreen(
                         catalogVersion = state.iconCatalogVersion,
                         iconShape = iconShape,
                         loadIcon = onLoadIcon,
+                        itemSpacing = itemSpacing,
                         isFavorite = true,
                         showLabelShadow = true,
                         isOpen = openRowId == app.id,
@@ -290,6 +296,7 @@ fun LauncherScreen(
                         catalogVersion = state.iconCatalogVersion,
                         iconShape = iconShape,
                         loadIcon = onLoadIcon,
+                        itemSpacing = itemSpacing,
                         onToggleFavorite = onToggleFavorite,
                         onAppClick = onAppClick,
                         onDismiss = { searchVisible = false },
@@ -335,6 +342,7 @@ fun LauncherScreen(
                                                 app = app,
                                                 catalogVersion = state.iconCatalogVersion,
                                                 iconShape = iconShape,
+                                                itemSpacing = itemSpacing,
                                                 loadIcon = onLoadIcon,
                                                 isFavorite = app.id in favoriteIds,
                                                 showLabelShadow = false,
@@ -384,10 +392,7 @@ fun LauncherScreen(
                                 onScrub = { target, finger ->
                                     if (scrub?.target != target) {
                                         when (target) {
-                                            AlphabetRailTarget.Favorites -> {
-                                                allAppsVisible = false
-                                                openRowId = null
-                                            }
+                                            AlphabetRailTarget.Favorites -> showFavorites(collapseRail = false)
                                             is AlphabetRailTarget.Section -> openAllAppsAt(target.letter)
                                             AlphabetRailTarget.Settings -> openAllAppsTools()
                                         }
@@ -397,11 +402,7 @@ fun LauncherScreen(
                                 onEnd = { scrub = null },
                                 onSelect = { target ->
                                     when (target) {
-                                        AlphabetRailTarget.Favorites -> {
-                                            allAppsVisible = false
-                                            openRowId = null
-                                            railExpanded = false
-                                        }
+                                        AlphabetRailTarget.Favorites -> showFavorites()
                                         is AlphabetRailTarget.Section -> openAllAppsAt(target.letter)
                                         AlphabetRailTarget.Settings -> openAllAppsTools()
                                     }

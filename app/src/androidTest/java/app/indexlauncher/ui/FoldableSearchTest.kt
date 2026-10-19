@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
@@ -19,10 +18,9 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipe
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.indexlauncher.R
@@ -81,10 +79,8 @@ class FoldableSearchTest {
                 }
             }
         }
-        compose.onAllNodes(hasScrollAction()).onLast().performScrollToNode(hasText("Favorite 39"))
-        compose.onNodeWithText("Favorite 39").performTouchInput {
-            swipe(center, Offset(center.x, center.y - 300f), durationMillis = 500)
-        }
+        compose.onNodeWithContentDescription(compose.activity.getString(R.string.jump_to_letter, "F")).performClick()
+        compose.onNodeWithContentDescription(compose.activity.getString(R.string.search_apps)).performClick()
         compose.onNodeWithContentDescription(closeSearch).assertIsDisplayed()
         compose.onNode(hasSetTextAction()).performTextInput("Favorite")
         compose.onAllNodes(hasScrollAction()).onLast().performScrollToNode(hasText("Favorite 25"))
