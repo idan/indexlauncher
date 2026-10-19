@@ -60,6 +60,12 @@ With an emulator or device connected, run the gesture, rail-haptic, adaptive-pan
 ./gradlew :app:connectedDebugAndroidTest
 ```
 
+### Download a CI build
+
+Every push to `main` builds a debug APK with [GitHub Actions](https://github.com/idan/indexlauncher/actions/workflows/build-apk.yml). Open a successful **Build debug APK** run and download the `index-launcher-debug-<commit>` artifact, then unzip it to get `app-debug.apk`. Artifacts are retained for 14 days. You can also start a build using **Run workflow** on the workflow page.
+
+CI builds use a runner-generated debug signing key, so installing a build from a later run may require uninstalling the previous CI build first (which deletes its app data). These are development builds, not signed release builds.
+
 ## Project documentation
 
 - [Documentation guide](docs/README.md) — product direction and where to start contributing.
