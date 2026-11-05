@@ -6,6 +6,9 @@ Index Launcher is a vertical **list launcher** for Android, inspired by Niagara 
 
 The emphasis is on **minimalism and speed**: less home-screen clutter, and a curated, small amount of configuration options.
 
+> [!NOTE]
+> No analytics, no tracking, no permissions. I made this for myself. I hope you enjoy it too!
+
 _All the rest of the text is AI, but I think it's useful._
 
 <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%20%22app.indexlauncher.debug%22%2C%20%22url%22%3A%20%22https%3A%2F%2Fgithub.com%2Fidan%2Findexlauncher%22%2C%20%22author%22%3A%20%22Idan%20Gazit%22%2C%20%22name%22%3A%20%22Index%20Launcher%22%7D"><img width="161" alt="Obtainium badge" src="https://github.com/user-attachments/assets/fb0b2b45-4929-4437-b90c-bb831c9c158a" /></a>
