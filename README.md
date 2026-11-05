@@ -1,6 +1,12 @@
 # Index Launcher
 
-Index Launcher is a vertical **list launcher** for Android, inspired by Niagara and Action Launcher before it. Keep a small list of favorites close at hand, reach the rest of your apps quickly through an alphabetical index, and swipe to additional pages for widgets in single- or dual-column layouts. The emphasis is on **minimalism and speed**: less home-screen clutter, fewer steps to the app you want, and room for your wallpaper to breathe.
+_Human-authored text here!_
+
+Index Launcher is a vertical **list launcher** for Android, inspired by Niagara and Action Launcher before it. Keep a small list of favorites on your main screen, reach the rest of your apps quickly through an alphabetical index that you can scrub through with a thumb. You can (optionally) add homescreen pages for widgets (which you can't do with Niagara). Widget pages are simplified into a two column structure, so each widget can be either full- or half-width. Widgets can be any height you like, and widget pages can scroll vertically. The launcher was designed to work well on foldables: the app index always stays on the right side, and widget pages on the left when unfolded. I've only tested it in the android simulator (effectively a pixel 10 pro fold) and my personal device, a Samsung Z Fold 8.
+
+The emphasis is on **minimalism and speed**: less home-screen clutter, and a curated, small amount of configuration options.
+
+_All the rest of the text is AI, but I think it's useful._
 
 ## Features
 
