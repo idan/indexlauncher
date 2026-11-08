@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -51,6 +52,8 @@ class HomePagerTest {
     private var count by mutableIntStateOf(2)
     private var rtl by mutableStateOf(false)
     private var homeRequest by mutableIntStateOf(0)
+    private var order by mutableStateOf(listOf(1, 2, 3, 4, 5))
+    private var overview by mutableStateOf(false)
 
     @Test fun homeRequestReturnsFromWidgetsToAppsWithoutResettingAppState() {
         showHome()
@@ -176,6 +179,46 @@ class HomePagerTest {
         compose.onNodeWithText("Widget state 1").assertIsDisplayed()
     }
 
+    @Test fun reorderingPreservesSelectedScreenAndItsLocalState() {
+        showHome()
+        compose.onNodeWithTag("app-row").performTouchInput { swipeRight() }
+        compose.onNodeWithText("Edit widget 1").performClick()
+        compose.runOnIdle { order = listOf(2, 1, 3, 4, 5) }
+        compose.onNodeWithText("Widget 1").assertIsDisplayed()
+        compose.onNodeWithText("Widget state 1").assertIsDisplayed()
+        compose.onNodeWithTag("widget-1").performTouchInput { swipeLeft() }
+        compose.onNodeWithText("Widget 2").assertIsDisplayed()
+        compose.onNodeWithTag("widget-2").performTouchInput { swipeLeft() }
+        compose.onNodeWithText("App state 0").assertIsDisplayed()
+    }
+
+    @Test fun overviewReleasesWidgetContentButRestoresPageStateOnDismiss() {
+        showHome()
+        compose.onNodeWithText("Increment").performClick()
+        compose.onNodeWithTag("app-row").performTouchInput { swipeRight() }
+        compose.onNodeWithText("Edit widget 1").performClick()
+        compose.runOnIdle { overview = true }
+        compose.onNodeWithText("Page overview").assertIsDisplayed()
+        compose.onNodeWithText("Widget 1").assertDoesNotExist()
+        compose.onNodeWithText("App state 1").assertIsNotDisplayed()
+        compose.runOnIdle { overview = false }
+        compose.onNodeWithText("Widget 1").assertIsDisplayed()
+        compose.onNodeWithText("Widget state 1").assertIsDisplayed()
+        compose.onNodeWithTag("widget-1").performTouchInput { swipeLeft() }
+        compose.onNodeWithText("App state 1").assertIsDisplayed()
+    }
+
+    @Test fun wideOverviewLeavesAppPaneInPlace() {
+        requireWideWindow()
+        expanded = true
+        showHome()
+        compose.onNodeWithText("Increment").performClick()
+        compose.runOnIdle { overview = true }
+        compose.onNodeWithText("Page overview").assertIsDisplayed()
+        compose.onNodeWithText("App state 1").assertIsDisplayed()
+        compose.onNodeWithText("Widget 1").assertDoesNotExist()
+    }
+
     private fun requireWideWindow() {
         assumeTrue("Two-pane tests need an unfolded/wide emulator", compose.activity.resources.configuration.screenWidthDp >= 760)
     }
@@ -188,7 +231,8 @@ class HomePagerTest {
             CompositionLocalProvider(LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr) {
                 Box(Modifier.width(if (expanded) 760.dp else 360.dp).height(650.dp)) {
                     HomePager(
-                        counts = PageCounts(count),
+                        counts = PageCounts(count, order),
+                        widgetOverview = if (overview) { { Text("Page overview") } } else null,
                         homeRequest = homeRequest,
                         appPage = { _, _, _, _ ->
                             var value by rememberSaveable { mutableIntStateOf(0) }

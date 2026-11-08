@@ -39,6 +39,10 @@ class SettingsActivity : ComponentActivity() {
                     onIconShapeChange = iconShapes::setShape,
                     onLeftCountChange = pageSettings::setLeft,
                     onChooseWallpaper = ::chooseWallpaper,
+                    onReorderPages = {
+                        startActivity(Intent(this@SettingsActivity, MainActivity::class.java).setAction(ACTION_REORDER_WIDGET_PAGES))
+                        finish()
+                    },
                     onBack = ::finish,
                 )
             }

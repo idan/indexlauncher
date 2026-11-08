@@ -76,6 +76,7 @@ fun HomePager(
     widgetPage: @Composable (HomePage.Widgets, active: Boolean) -> Unit,
     foldingFeatures: List<FoldingFeature> = emptyList(),
     homeRequest: Int = 0,
+    widgetOverview: (@Composable () -> Unit)? = null,
 ) {
     var compactOrdinal by rememberSaveable { mutableIntStateOf(0) }
     var widgetOrdinal by rememberSaveable { mutableIntStateOf(1) }
@@ -121,12 +122,12 @@ fun HomePager(
         )
         val expanded = split != null
         val initialOrdinal = if (expanded) {
-            (if (!wasExpanded && compactOrdinal > 0) compactOrdinal else widgetOrdinal)
-                .coerceIn(1, counts.left.coerceAtLeast(1))
+            val selected = if (!wasExpanded && compactOrdinal > 0) compactOrdinal else widgetOrdinal
+            selected.takeIf { it in counts.visibleOrdinals } ?: counts.visibleOrdinals.lastOrNull() ?: 0
         } else {
-            if (wasExpanded) 0 else compactOrdinal.coerceIn(0, counts.left)
+            if (wasExpanded) 0 else compactOrdinal
         }
-        val pager = key(expanded, counts.left) {
+        val pager = key(expanded, counts.left, counts.order) {
             rememberPagerState(
                 initialPage = counts.indexOfOrdinal(initialOrdinal),
                 pageCount = { if (expanded) counts.left.coerceAtLeast(1) else counts.pageCount },
@@ -135,9 +136,9 @@ fun HomePager(
         LaunchedEffect(pager) {
             snapshotFlow { pager.settledPage }.collect {
                 if (expanded) {
-                    if (counts.left > 0) widgetOrdinal = counts.left - it
+                    if (counts.left > 0) widgetOrdinal = counts.ordinalAt(it)
                 } else {
-                    compactOrdinal = counts.left - it
+                    compactOrdinal = counts.ordinalAt(it)
                     if (compactOrdinal > 0) {
                         widgetOrdinal = compactOrdinal
                         awaitingRailInteraction = true
@@ -158,13 +159,13 @@ fun HomePager(
         }
         // Focus/IME activation follows the settled page, not transient scroll progress. Toggling
         // search focus during a bring-into-view scroll would continually restart that scroll.
-        val appsActive = expanded || pager.settledPage == counts.appsIndex
+        val appsActive = expanded || (widgetOverview == null && pager.settledPage == counts.appsIndex)
         val fling = PagerDefaults.flingBehavior(pager)
         Layout(
             modifier = Modifier.fillMaxSize().clipToBounds()
                 // In compact mode this ancestor owns paging, so unconsumed rightward row drags
                 // reach it. The app content has one permanent composition, independent of panes.
-                .scrollable(pager, Orientation.Horizontal, enabled = !expanded,
+                .scrollable(pager, Orientation.Horizontal, enabled = !expanded && widgetOverview == null,
                     reverseDirection = true, flingBehavior = fling)
                 .drawBehind {
                     val fade = if (expanded) 1f else {
@@ -181,13 +182,15 @@ fun HomePager(
                 },
             content = {
                 Box(Modifier.fillMaxSize()) {
-                    if (expanded && counts.left == 0) {
+                    if (widgetOverview != null) {
+                        widgetOverview()
+                    } else if (expanded && counts.left == 0) {
                         Text(
                             stringResource(R.string.foldable_no_widget_pages),
                             modifier = Modifier.align(Alignment.Center).padding(24.dp),
                             style = MaterialTheme.typography.bodyLarge,
                         )
-                    } else key(expanded, counts.left) {
+                    } else key(expanded, counts.left, counts.order) {
                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                             HorizontalPager(
                                 state = pager,
@@ -235,7 +238,7 @@ fun HomePager(
             val appPane = measurables[1].measure(Constraints.fixed(constraints.maxWidth - rightStart, constraints.maxHeight))
             layout(constraints.maxWidth, constraints.maxHeight) {
                 widgetPane.place(0, 0)
-                val appX = if (expanded) rightStart else
+                val appX = if (expanded) rightStart else if (widgetOverview != null) constraints.maxWidth else
                     ((counts.appsIndex - pager.currentPage - pager.currentPageOffsetFraction) * constraints.maxWidth).roundToInt()
                 appPane.place(appX, 0)
             }

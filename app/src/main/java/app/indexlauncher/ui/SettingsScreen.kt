@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,6 +58,7 @@ fun SettingsScreen(
     onLeftCountChange: (Int) -> Unit,
     onChooseWallpaper: () -> Unit,
     onBack: () -> Unit,
+    onReorderPages: () -> Unit = {},
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -105,6 +107,11 @@ fun SettingsScreen(
                 count = counts.left,
                 onCountChange = onLeftCountChange,
             )
+            OutlinedButton(onClick = onReorderPages, enabled = counts.left > 1, modifier = Modifier.fillMaxWidth()) {
+                Icon(painterResource(R.drawable.ic_reorder_pages), contentDescription = null)
+                Spacer(Modifier.width(12.dp))
+                Text(stringResource(R.string.reorder_widget_pages))
+            }
             Text(
                 stringResource(R.string.hidden_pages_description),
                 style = MaterialTheme.typography.bodyMedium,

@@ -19,6 +19,7 @@ Completed work is recorded here; pending work lives in [TODO.md](TODO.md). This 
 
 ### Widgets
 
+- Added whole-page reordering from the widget edit bar and Settings, with configured-widget thumbnail snapshots, long-press dragging, edge auto-scroll, accessible arrow actions, and a cancellable draft. Stable page identities preserve placements and page-local state; hidden pages return in the chosen order. The overview stays in the widget pane on wide windows, uses one retained host view per widget ID, and never stores snapshots on disk.
 - Added AppWidgetHost lifecycle management, binding consent, provider configuration, pending-selection restoration, and canceled/failed widget-ID cleanup.
 - Added persistent home widgets above favorites, sharing one bottom-aligned vertical list and scrolling together, with temporary hiding during all apps/search. The Homescreen Widgets tool opens home Edit mode even with no widgets.
 - Added shared single-/dual-column widget flow for home and left-side pages: full-width widgets, paired half-width widgets, provider-informed automatic sizing, and saved width/height/order choices.

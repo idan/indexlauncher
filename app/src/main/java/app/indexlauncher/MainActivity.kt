@@ -1,7 +1,6 @@
 package app.indexlauncher
 
 import android.app.Activity
-import android.appwidget.AppWidgetHost
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo
 import android.content.ActivityNotFoundException
@@ -24,6 +23,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableIntStateOf
@@ -54,6 +54,8 @@ import app.indexlauncher.ui.LauncherScreen
 import app.indexlauncher.ui.LauncherViewModel
 import app.indexlauncher.ui.WidgetGalleryScreen
 import app.indexlauncher.ui.WidgetPageScreen
+import app.indexlauncher.ui.WidgetPageOverview
+import app.indexlauncher.ui.RetainedWidgetHost
 import app.indexlauncher.ui.theme.IndexLauncherTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -68,6 +70,8 @@ private const val PENDING_WIDGET_PROVIDER = "pending_widget_provider"
 private const val PENDING_WIDGET_PROFILE = "pending_widget_profile"
 private const val GALLERY_PAGE = "gallery_page"
 private const val HOME_REQUEST = "home_request"
+private const val REORDER_PAGE = "reorder_page"
+internal const val ACTION_REORDER_WIDGET_PAGES = "app.indexlauncher.action.REORDER_WIDGET_PAGES"
 
 class MainActivity : ComponentActivity() {
     private val viewModel: LauncherViewModel by viewModels {
@@ -89,13 +93,14 @@ class MainActivity : ComponentActivity() {
     private val favorites by lazy { FavoritesRepository(applicationContext) }
     private val launcherApps by lazy { getSystemService(LauncherApps::class.java) }
     private val userManager by lazy { getSystemService(UserManager::class.java) }
-    private val widgetHost by lazy { AppWidgetHost(this, WIDGET_HOST_ID) }
+    private val widgetHost by lazy { RetainedWidgetHost(this, WIDGET_HOST_ID) }
     private val widgetManager by lazy { AppWidgetManager.getInstance(this) }
     private var pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     private var pendingWidgetPage: String? = null
     private var pendingProvider: ComponentName? = null
     private var pendingProfileSerial: Long? = null
     private var galleryPage by mutableStateOf<String?>(null)
+    private var reorderPage by mutableIntStateOf(-1)
     private var homeRequest by mutableIntStateOf(0)
     private var selectingWidget by mutableStateOf(false)
     private var widgetCatalogVersion by mutableIntStateOf(0)
@@ -120,6 +125,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         homeRequest = savedInstanceState?.getInt(HOME_REQUEST) ?: 0
+        reorderPage = savedInstanceState?.getInt(REORDER_PAGE) ?: if (intent.action == ACTION_REORDER_WIDGET_PAGES) 0 else -1
         pendingWidgetId = savedInstanceState?.getInt(PENDING_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
             ?: AppWidgetManager.INVALID_APPWIDGET_ID
         pendingWidgetPage = savedInstanceState?.getString(PENDING_WIDGET_PAGE)
@@ -148,11 +154,29 @@ class MainActivity : ComponentActivity() {
                 val widgetGaps = widgetSpacing.spacing.collectAsStateWithLifecycle().value
                 val widgets = widgetPlacements.widgets.collectAsStateWithLifecycle().value
                 val favoriteIds = favorites.ids.collectAsStateWithLifecycle().value
+                LaunchedEffect(counts.left) {
+                    if (counts.left < 2) reorderPage = -1
+                }
                 Box(Modifier.fillMaxSize()) {
                     HomePager(
                         counts = counts,
                         homeRequest = homeRequest,
                         foldingFeatures = foldingFeatures,
+                        widgetOverview = if (reorderPage >= 0 && counts.left > 1) {
+                            {
+                                WidgetPageOverview(
+                                    counts = counts,
+                                    widgets = widgets,
+                                    host = widgetHost,
+                                    manager = widgetManager,
+                                    spacing = widgetGaps,
+                                    version = widgetCatalogVersion,
+                                    sourceOrdinal = reorderPage,
+                                    onConfirm = { order -> pageSettings.reorder(order); reorderPage = -1 },
+                                    onCancel = { reorderPage = -1 },
+                                )
+                            }
+                        } else null,
                         appPage = { suppressRail, active, onRailInteraction, onScrimOpacityChange ->
                             LauncherScreen(
                                 state = state,
@@ -196,6 +220,7 @@ class MainActivity : ComponentActivity() {
                                 host = widgetHost,
                                 manager = widgetManager,
                                 onAddWidget = { addWidget(page.key) },
+                                onReorderPages = if (counts.left > 1) { { reorderPage = page.ordinal } } else null,
                                 onRemoveWidget = { id -> removeWidget(page.key, id) },
                                 onMoveWidget = { id, direction -> widgetPlacements.move(page.key, id, direction) },
                                 onWidthChange = { id, width -> widgetPlacements.setWidth(page.key, id, width) },
@@ -225,7 +250,12 @@ class MainActivity : ComponentActivity() {
         // A normal resume (from an app, Settings, or a widget flow) must preserve the view.
         if (intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)) {
             galleryPage = null
+            reorderPage = -1
             homeRequest++
+        } else if (intent.action == ACTION_REORDER_WIDGET_PAGES) {
+            galleryPage = null
+            pageSettings.refresh()
+            reorderPage = 0
         }
     }
 
@@ -260,6 +290,7 @@ class MainActivity : ComponentActivity() {
         outState.putString(PENDING_WIDGET_PROVIDER, pendingProvider?.flattenToString())
         pendingProfileSerial?.let { outState.putLong(PENDING_WIDGET_PROFILE, it) }
         outState.putString(GALLERY_PAGE, galleryPage)
+        outState.putInt(REORDER_PAGE, reorderPage)
         super.onSaveInstanceState(outState)
     }
 

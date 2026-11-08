@@ -42,6 +42,48 @@ class HomePagesTest {
         assertEquals(0, PageCounts(0).indexOfOrdinal(5))
     }
 
+    @Test fun reorderedPagesKeepTheirKeysAndAppsStayRightmost() {
+        val pages = PageCounts(3).withVisibleOrder(listOf(3, 1, 2))
+        assertEquals(HomePage.Widgets(2), pages.pageAt(0))
+        assertEquals(HomePage.Widgets(1), pages.pageAt(1))
+        assertEquals(HomePage.Widgets(3), pages.pageAt(2))
+        assertEquals(HomePage.Apps, pages.pageAt(3))
+        assertEquals(3, pages.ordinalAt(2))
+        assertEquals(0, pages.ordinalAt(3))
+        assertEquals(2, pages.indexOfOrdinal(3))
+        assertEquals("left-3", (pages.pageAt(2) as HomePage.Widgets).key)
+    }
+
+    @Test fun hidingAndRestoringUsesChosenOrderWithoutTouchingHiddenScreens() {
+        val ordered = PageCounts(3).withVisibleOrder(listOf(3, 1, 2))
+        val hidden = ordered.copy(left = 2)
+        assertEquals(listOf(3, 1), hidden.visibleOrdinals)
+        assertEquals(0, hidden.indexOfOrdinal(2))
+        val moved = hidden.withVisibleOrder(listOf(1, 3))
+        assertEquals(listOf(1, 3, 2, 4, 5), moved.order)
+        assertEquals(listOf(1, 3, 2), moved.copy(left = 3).visibleOrdinals)
+    }
+
+    @Test fun malformedSavedOrderIsRepaired() {
+        assertEquals(listOf(1, 2, 3, 4, 5), normalizedPageOrder(emptyList()))
+        assertEquals(listOf(3, 1, 2, 4, 5), normalizedPageOrder(listOf(3, 3, -1, 1, 6)))
+    }
+
+    @Test fun accessibleMovesHaveFiniteBoundaries() {
+        assertEquals(listOf(3, 1, 2), movePage(listOf(3, 2, 1), 1, -1))
+        assertEquals(listOf(3, 2, 1), movePage(listOf(3, 2, 1), 3, -1))
+        assertEquals(listOf(3, 2, 1), movePage(listOf(3, 2, 1), 1, 1))
+        assertEquals(listOf(3, 2, 1), movePage(listOf(3, 2, 1), 5, 1))
+        assertThrows(IllegalArgumentException::class.java) { movePage(listOf(1, 2), 1, 0) }
+    }
+
+    @Test fun invalidOrdersAndReorderingHiddenScreensAreRejected() {
+        assertThrows(IllegalArgumentException::class.java) { PageCounts(2, listOf(1, 1, 3, 4, 5)) }
+        assertThrows(IllegalArgumentException::class.java) { PageCounts(2, listOf(1, 2)) }
+        assertThrows(IllegalArgumentException::class.java) { PageCounts(2).withVisibleOrder(listOf(1, 3)) }
+        assertThrows(IllegalArgumentException::class.java) { PageCounts(2).withVisibleOrder(listOf(1, 1)) }
+    }
+
     @Test fun invalidCountsAndOrdinalsAreRejected() {
         assertThrows(IllegalArgumentException::class.java) { PageCounts(-1) }
         assertThrows(IllegalArgumentException::class.java) { PageCounts(6) }

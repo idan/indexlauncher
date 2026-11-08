@@ -27,6 +27,13 @@
     <string name="widget_screens_description">Add up to five widget screens to the left of your favorites. Swipe right to visit them; there is no wraparound. Wide windows show widgets on the left and keep favorites on the right.</string>
     <string name="widget_pages_title">Left of favorites</string>
     <string name="widget_pages_description">Swipe right from favorites to visit widget screens</string>
+    <string name="reorder_widget_pages">Reorder widget pages</string>
+    <string name="reorder_pages_hint">Long-press a screen and drag left or right, or use its arrows. Home stays on the right.</string>
+    <string name="reorder">Reorder</string>
+    <string name="page_order_position">%1$d of %2$d from Home</string>
+    <string name="page_move_away">Move screen %1$d away from Home</string>
+    <string name="page_move_toward">Move screen %1$d toward Home</string>
+    <string name="page_snapshot_more">More widgets below ↓</string>
     <string name="hidden_pages_description">Removing screens hides the outermost pages and their widgets. Add them back to restore everything.</string>
     <string name="widget_page">Widget screen %1$d</string>
     <string name="foldable_no_widget_pages">Enable widget screens in settings to use this space.</string>

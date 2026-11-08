@@ -68,7 +68,6 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
@@ -82,9 +81,7 @@ import app.indexlauncher.model.WidgetSpacing
 import app.indexlauncher.model.WidgetWidth
 import app.indexlauncher.model.resizedWidgetHeight
 import app.indexlauncher.model.widgetWidthAfterDrag
-import app.indexlauncher.model.widgetHeightRange
 import app.indexlauncher.model.widgetRows
-import kotlin.math.roundToInt
 
 private const val ACCESSIBILITY_HEIGHT_STEP_DP = 40
 
@@ -101,6 +98,7 @@ fun WidgetPageScreen(
     onHeightChange: (Int, Int) -> Unit,
     active: Boolean = true,
     spacing: WidgetSpacing = WidgetSpacing.Default,
+    onReorderPages: (() -> Unit)? = null,
 ) {
     var editing by rememberSaveable(page.key) { mutableStateOf(false) }
     WidgetEditor(
@@ -108,6 +106,7 @@ fun WidgetPageScreen(
         spacing = spacing,
         pageName = stringResource(R.string.widget_page, page.ordinal),
         handleBack = active,
+        onReorderPages = onReorderPages,
         widgets = widgets,
         host = host,
         manager = manager,
@@ -172,6 +171,7 @@ private fun WidgetEditor(
     onHeightChange: (Int, Int) -> Unit,
     isHome: Boolean = false,
     handleBack: Boolean = true,
+    onReorderPages: (() -> Unit)? = null,
 ) {
     val pagePadding = spacing.outerPaddingDp.dp
     val columnGap = spacing.columnGapDp.dp
@@ -179,6 +179,7 @@ private fun WidgetEditor(
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
     var pendingRemoval by remember { mutableStateOf<Int?>(null) }
+    var editBarHeight by remember { mutableStateOf(0.dp) }
     val addLabel = stringResource(R.string.add_widget)
     val editLabel = stringResource(R.string.edit_widgets)
     val ids = widgets.map { it.id }
@@ -230,13 +231,7 @@ private fun WidgetEditor(
             val availableWidth = (maxWidth - pagePadding * 2).coerceAtLeast(0.dp)
             val halfWidth = ((availableWidth - columnGap) / 2).coerceAtLeast(0.dp)
             val halfIds = widgets.filter { placement ->
-                val info = infos[placement.id]
-                when (placement.width) {
-                    WidgetWidth.AUTO -> info != null && info.minWidth > 0 &&
-                        with(density) { info.minWidth.toDp() <= halfWidth }
-                    WidgetWidth.HALF -> supportsHalfWidth(info, halfWidth, density)
-                    WidgetWidth.FULL -> false
-                }
+                isHalfWidget(placement, infos[placement.id], halfWidth, density)
             }.mapTo(mutableSetOf()) { it.id }
             val rows = widgetRows(widgets) { it.id in halfIds }
             val rowContent: @Composable (WidgetRow) -> Unit = { row ->
@@ -273,7 +268,7 @@ private fun WidgetEditor(
                     verticalArrangement = Arrangement.spacedBy(rowGap),
                 ) {
                     rows.forEach { row -> key(row.first.id) { rowContent(row) } }
-                    if (editing) Spacer(Modifier.height(96.dp))
+                    if (editing) Spacer(Modifier.height((editBarHeight + 12.dp).coerceAtLeast(96.dp)))
                 }
             } else {
                 LazyColumn(
@@ -282,7 +277,7 @@ private fun WidgetEditor(
                     },
                     contentPadding = PaddingValues(
                         start = pagePadding, end = pagePadding, top = pagePadding,
-                        bottom = if (editing) 104.dp else pagePadding,
+                        bottom = if (editing) (editBarHeight + 12.dp).coerceAtLeast(104.dp) else pagePadding,
                     ),
                     verticalArrangement = Arrangement.spacedBy(rowGap),
                 ) {
@@ -308,31 +303,19 @@ private fun WidgetEditor(
                 }
             }
             if (editing) {
-                Row(
-                    Modifier.align(Alignment.BottomCenter)
+                WidgetEditBar(
+                    onAddWidget = onAddWidget,
+                    onDone = { onEditingChange(false) },
+                    onReorderPages = onReorderPages,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                        .onSizeChanged { editBarHeight = with(density) { it.height.toDp() } }
                         .padding(bottom = 12.dp)
                         .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.extraLarge)
                         .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    FilledTonalButton(onClick = onAddWidget) {
-                        Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(20.dp))
-                        Text(stringResource(R.string.add_widget))
-                    }
-                    TextButton(onClick = { onEditingChange(false) }) { Text(stringResource(R.string.done)) }
-                }
+                )
             }
         }
     }
-}
-
-private fun supportsHalfWidth(info: AppWidgetProviderInfo?, halfWidth: Dp, density: Density): Boolean {
-    if (info == null || halfWidth <= 0.dp) return false
-    val minWidth = if (info.resizeMode and AppWidgetProviderInfo.RESIZE_HORIZONTAL != 0 &&
-        info.minResizeWidth > 0
-    ) info.minResizeWidth else info.minWidth
-    return minWidth > 0 && with(density) { minWidth.toDp() <= halfWidth }
 }
 
 @Composable
@@ -356,20 +339,9 @@ private fun HostedWidgetCard(
     val context = LocalContext.current
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
-    val defaultHeight = if (info != null && info.minHeight > 0) {
-        with(density) { info.minHeight.toDp().value.roundToInt().coerceAtLeast(1) }
-    } else null
+    val defaultHeight = defaultWidgetHeight(info, density)
     val resizable = info != null && info.resizeMode and AppWidgetProviderInfo.RESIZE_VERTICAL != 0
-    val heightRange = widgetHeightRange(
-        defaultDp = defaultHeight ?: 140,
-        verticallyResizable = resizable,
-        minResizeDp = info?.minResizeHeight?.takeIf { it > 0 }?.let {
-            with(density) { it.toDp().value.roundToInt().coerceAtLeast(1) }
-        },
-        maxResizeDp = info?.maxResizeHeight?.takeIf { it > 0 }?.let {
-            with(density) { it.toDp().value.roundToInt().coerceAtLeast(1) }
-        },
-    )
+    val heightRange = widgetHeightLimits(info, density)
     val minHeight = heightRange.first
     val maxHeight = heightRange.last
     val savedHeight = (placement.heightDp ?: defaultHeight ?: minHeight).coerceIn(minHeight, maxHeight)
@@ -415,7 +387,8 @@ private fun HostedWidgetCard(
                     factory = { viewContext ->
                         LongPressWidgetFrame(viewContext).apply {
                             val child = try {
-                                host.createView(viewContext, placement.id, info)
+                                if (host is RetainedWidgetHost) host.obtainView(viewContext, placement.id, info)
+                                else host.createView(viewContext, placement.id, info)
                             } catch (e: RuntimeException) {
                                 Log.w("WidgetPage", "Cannot display widget ${placement.id}", e)
                                 TextView(viewContext).apply {
@@ -426,6 +399,7 @@ private fun HostedWidgetCard(
                             addView(child, ViewGroup.LayoutParams(-1, -1))
                         }
                     },
+                    onRelease = { frame -> frame.removeAllViews() },
                     update = { frame ->
                         frame.isEditing = editing
                         frame.onWidgetLongPress = if (allowLongPressEdit) onEdit else null

@@ -18,7 +18,7 @@ _All the rest of the text is AI, but I think it's useful._
 - **Favorites first.** A bottom-aligned list of your everyday apps, with a swipe-to-star action for adding and removing favorites. Long-press and drag to reorder; longer lists scroll, and your chosen order persists across restarts.
 - **Fast alphabetical access.** Tap or scrub the A–Z rail to jump through all apps, with a target bubble that follows your finger and a subtle haptic tick for each new entry while scrubbing. Only populated letters appear. Non-Latin app names keep their original labels, with romanized indexing and search aliases where available.
 - **Search on demand.** Use the search button in all apps to open focused, keyboard-ready app search. Scrolling favorites never opens search, and there is no permanent search box on Home.
-- **Widgets without an icon grid.** Place widgets above favorites or on up to five pages to the left. Mix full-width widgets with pairs of half-width widgets; resize, reorder, and remove them in Edit mode. Hiding a page retains its widgets.
+- **Widgets without an icon grid.** Place widgets above favorites or on up to five pages to the left. Mix full-width widgets with pairs of half-width widgets; resize, reorder, and remove them in Edit mode. Reorder entire pages in a thumbnail overview. Hiding a page retains its widgets.
 - **Foldable-friendly Home.** Wide windows show widgets on the left while keeping your current favorites, all-apps, or search view on the right. Folding returns to the app screen; the widget pane remembers its page.
 - **An app-grouped widget gallery.** Browse providers and previews, including available work-profile widgets where administrator policy permits hosting.
 - **Personal and work apps.** Available work apps appear alongside personal apps with badged icons and separate favorites. Pausing a work profile hides its apps without forgetting those favorites.
@@ -39,8 +39,11 @@ Index Launcher is in development and supports **Android 15+ (API 35)**. Private 
 | Edit widgets above favorites | Tap **Homescreen Widgets** below the settings tile in all apps. Use Add widget and Done; home long-presses do not open the editor. |
 | Visit widget pages | Swipe right from the app page. Pages extend only to the left and never wrap. In wide windows, swipe within the left pane to browse widgets independently. Set the page count to **0–5** in settings. |
 | Add/edit a widget on a left-side page | Long-press empty space to open the gallery, or long-press a widget to enter Edit mode. Empty pages also have an Add widget button. |
+| Reorder widget pages | With two or more pages, tap the reorder-pages icon (**Reorder** when space allows) in the widget edit bar, or **Reorder widget pages** below the page-count setting. Long-press a thumbnail and drag, or use its arrows; **Done** saves and **Cancel/Back** discards changes. Home stays on the right. |
 
 In widget Edit mode, drag the bottom handle for height or the side handle for half/full width when supported. Arrow controls change order; the trash control asks before removing a widget. Done or Back locks the layout. Providers control their own contents, so giving a widget more space does not guarantee that it will reflow. Home widgets and favorites scroll together in one vertical list, and home widgets temporarily hide in all apps and search.
+
+Page thumbnails show the top of each screen, with widget labels and an indicator for content below the viewport. They use your configured widgets, not gallery examples; previews are kept in memory only. Reordering preserves each page’s widgets, sizes, and scroll/edit state. Reducing the page count hides the outermost pages in your chosen order; adding them back restores them. In wide windows, the overview occupies only the widget pane.
 
 Under **Settings → Appearance → Item spacing**, adjust the vertical padding above and below app icons (4–28 dp, default 12 dp). The saved setting applies to favorites, all apps, and search; icons stay the same size and compact rows retain a 48 dp touch target.
 
