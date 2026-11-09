@@ -1,0 +1,10 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "indexlauncher",
+	"compatibility_date": "2026-11-04",
+	// SvelteKit prerenders the entire site; deploy only the static output.
+	// An explicit config prevents Wrangler from auto-installing an SSR adapter.
+	"assets": {
+		"directory": "./build"
+	}
+}

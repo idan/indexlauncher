@@ -28,7 +28,21 @@ npm run preview  # serve the build
 
 The output in `build/` is plain HTML, CSS, JS, and fonts. It runs from a domain root by default. To serve it from a subpath, set `BASE_PATH` (for example, `/indexlauncher`) at build time.
 
-### Cloudflare Pages
+### Cloudflare Workers (static assets)
+
+Connect the repository in **Workers & Pages → Create → Workers**, then use:
+
+- **Worker name:** `indexlauncher` (must match `wrangler.jsonc`)
+- **Root directory:** `web`
+- **Build command:** `npm run build`
+- **Deploy command:** `npx wrangler deploy`
+- **Environment variable:** `NODE_VERSION=24`, if the build image doesn't pick up `.nvmrc`
+
+`wrangler.jsonc` deploys `build/` as static assets, without a Worker script or SSR adapter. Keep `@sveltejs/adapter-static`: the whole site is prerendered. The explicit config also prevents Wrangler's SvelteKit auto-setup from modifying the project during deployment (which can introduce a failing `wrangler types --check` step).
+
+From your machine, run `npm run deploy` to build and deploy, or `npm run build && npx wrangler deploy --dry-run` to validate without publishing. Wrangler is pinned in the project's dev dependencies and lockfile, so CI doesn't download an unpinned CLI at deploy time.
+
+### Cloudflare Pages (alternative)
 
 Connect the repository in **Workers & Pages → Create → Pages**, then use:
 
