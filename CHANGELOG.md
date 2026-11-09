@@ -31,6 +31,7 @@ Completed work is recorded here; pending work lives in [TODO.md](TODO.md). This 
 
 ### Appearance and project setup
 
+- Replaced the layered launcher icon with an “↓ A Z” mark: Nunito ExtraBold letters as outlines beside an arrow that fades in from the top edge, on the same purple gradient. `design/icon/build.mjs` generates the adaptive-icon layers and the website icon from one set of parameters.
 - Added persistent development signing and workflow-run-number versions for CI APKs, with automatic GitHub prereleases, retry-safe draft uploads, and preservation of published/promoted builds. Local builds retain their default debug signing and version unless explicitly configured.
 - Added saved widget-spacing controls for outside padding and independent row/column gaps (0–40 dp), shared by home widgets and left-side widget pages without changing provider-internal padding.
 - Added saved item-spacing controls for favorites, all apps, and search (4–28 dp vertical padding, keeping icons fixed-size and touch targets at least 48 dp).
