@@ -30,7 +30,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -64,6 +63,30 @@ import app.indexlauncher.model.ItemSpacing
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
+/** Use memory on the first frame; keep a visible icon during refresh, never across apps/shapes. */
+@Composable
+internal fun rememberAppIcon(
+    app: AppEntry,
+    catalogVersion: Int,
+    iconShape: IconShape,
+    getCachedIcon: (AppEntry, Int, IconShape) -> Bitmap?,
+    loadIcon: suspend (AppEntry, Int, IconShape) -> Bitmap?,
+): Bitmap? {
+    val previousBitmap = remember(app.id, iconShape) { mutableStateOf<Bitmap?>(null) }
+    val cached = remember(app.id, catalogVersion, iconShape) {
+        getCachedIcon(app, catalogVersion, iconShape)
+    }
+    val bitmap = remember(app.id, catalogVersion, iconShape) {
+        mutableStateOf(cached ?: previousBitmap.value)
+    }
+    LaunchedEffect(app.id, catalogVersion, iconShape) {
+        val loaded = cached ?: loadIcon(app, catalogVersion, iconShape)
+        previousBitmap.value = loaded
+        bitmap.value = loaded
+    }
+    return bitmap.value
+}
+
 private val actionWidth = 80.dp
 private val revealAnimation = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
 
@@ -82,11 +105,10 @@ fun AppRow(
     onClick: (AppEntry) -> Unit,
     itemSpacing: ItemSpacing = ItemSpacing.Default,
     accessibilityActions: List<CustomAccessibilityAction> = emptyList(),
+    getCachedIcon: (AppEntry, Int, IconShape) -> Bitmap? = { _, _, _ -> null },
 ) {
     val rowHeight = itemSpacing.rowHeightDp.dp
-    val bitmap by produceState<Bitmap?>(null, app.id, catalogVersion, iconShape) {
-        value = loadIcon(app, catalogVersion, iconShape)
-    }
+    val bitmap = rememberAppIcon(app, catalogVersion, iconShape, getCachedIcon, loadIcon)
     val image = remember(bitmap) { bitmap?.asImageBitmap() }
     val density = LocalDensity.current
     val actionWidthPx = with(density) { actionWidth.toPx() }

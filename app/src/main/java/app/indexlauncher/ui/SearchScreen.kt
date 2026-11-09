@@ -55,6 +55,7 @@ fun SearchScreen(
     onDismiss: () -> Unit,
     active: Boolean = true,
     itemSpacing: ItemSpacing = ItemSpacing.Default,
+    getCachedIcon: (AppEntry, Int, IconShape) -> Bitmap? = { _, _, _ -> null },
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var openRowId by remember { mutableStateOf<String?>(null) }
@@ -124,6 +125,7 @@ fun SearchScreen(
                     iconShape = iconShape,
                     itemSpacing = itemSpacing,
                     loadIcon = loadIcon,
+                    getCachedIcon = getCachedIcon,
                     isFavorite = app.id in favoriteIds,
                     showLabelShadow = false,
                     isOpen = openRowId == app.id,

@@ -28,12 +28,27 @@ class LauncherViewModel(
     private val _uiState = MutableStateFlow(LauncherUiState())
     val uiState = _uiState.asStateFlow()
     private var loadJob: Job? = null
+    private var preloadJob: Job? = null
+
+    fun getCachedIcon(app: AppEntry, catalogVersion: Int, shape: IconShape): Bitmap? =
+        iconRepository.getCachedIcon(app, catalogVersion, shape)
+
+    fun preloadIcons(shape: IconShape, favoriteIds: List<String>) {
+        preloadJob?.cancel()
+        val state = _uiState.value
+        val favorites = favoriteIds.toHashSet()
+        val apps = state.apps.filter { it.id in favorites } + state.apps.filter { it.id !in favorites }
+        preloadJob = viewModelScope.launch {
+            iconRepository.preloadIcons(apps, state.iconCatalogVersion, shape)
+        }
+    }
 
     suspend fun loadIcon(app: AppEntry, catalogVersion: Int, shape: IconShape): Bitmap? =
         iconRepository.loadIcon(app, catalogVersion, shape)
 
     fun refreshApps() {
         loadJob?.cancel()
+        preloadJob?.cancel()
         loadJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, loadFailed = false) }
             try {

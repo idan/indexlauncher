@@ -6,6 +6,8 @@ Completed work is recorded here; pending work lives in [TODO.md](TODO.md). This 
 
 ### Apps and navigation
 
+- Reduced app-icon placeholder flashes during index scrubbing: favorites, all apps, and search now show memory-cached icons on the first frame instead of awaiting a background cache hit. Added favorites-first background preloading, coalesced overlapping loads, and a heap-scaled 8–32 MiB cache. Catalog/shape/profile keys and asynchronous fallbacks remain intact, with focused icon-state and repository regression tests.
+
 - Added invisible left-edge index scrubbing in single-pane Home/all apps, with the letter bubble following touch height beside the visible right rail. A 36 dp gutter keeps app rows out of the gesture area (60 dp app-icon inset), while home widgets use their configured outside padding on both sides and extend beneath the rail touch overlays. Search and two-pane layouts keep their existing spacing. Both sides share targets, haptics, and rail timing, with geometry and gesture regression tests.
 
 - Added long-press drag reordering for favorites, with a lifted-row preview, haptic feedback, edge auto-scroll, and accessible move-up/down actions. Drops persist the chosen order while preserving unavailable and distinct personal/work favorites; canceled drags leave the saved order unchanged.

@@ -25,6 +25,10 @@ import kotlin.math.roundToInt
 import kotlin.math.sign
 import kotlin.math.sin
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /** Loads activity-specific icons off the UI thread and bounds their bitmap memory use. */
@@ -34,23 +38,66 @@ class AppIconRepository(context: Context) {
     private val packageManager = context.packageManager
     private val resources = context.resources
     private val iconSizePx = (44 * context.resources.displayMetrics.density).roundToInt().coerceAtLeast(1)
-    private val cache = object : LruCache<String, Bitmap>(8 * 1024 * 1024) {
+    // At 3x density an icon is ~70 KiB: 8 MiB holds only about 120 icons,
+    // causing churn on larger app lists. Still cap use on small-heap devices.
+    private val cacheBytes = (Runtime.getRuntime().maxMemory() / 8)
+        .coerceIn(8L * 1024 * 1024, 32L * 1024 * 1024).toInt()
+    private val cache = object : LruCache<String, Bitmap>(cacheBytes) {
         override fun sizeOf(key: String, value: Bitmap): Int = value.byteCount
     }
+    private var generation = 0L // Guarded by cache, including in-flight publication.
+    private val loadLocks = Array(32) { Mutex() }
 
-    fun clear() = cache.evictAll()
+    fun clear() = synchronized(cache) {
+        generation++
+        cache.evictAll()
+    }
 
-    // A new catalog version avoids caching an icon from an in-flight, pre-refresh request.
-    suspend fun loadIcon(app: AppEntry, catalogVersion: Int, shape: IconShape): Bitmap? = withContext(Dispatchers.IO) {
-        val key = "$catalogVersion:${shape.name}:${app.id}"
-        cache.get(key)?.let { return@withContext it }
+    /** Memory-only: safe during composition, without dispatching or calling Android services. */
+    fun getCachedIcon(app: AppEntry, catalogVersion: Int, shape: IconShape): Bitmap? =
+        cache.get(cacheKey(app, catalogVersion, shape))
 
-        val bitmap = try {
-            val user = app.userHandle(userManager) ?: return@withContext null
-            if (user !in launcherApps.profiles || userManager.isQuietModeEnabled(user)) return@withContext null
+    suspend fun loadIcon(app: AppEntry, catalogVersion: Int, shape: IconShape): Bitmap? {
+        getCachedIcon(app, catalogVersion, shape)?.let { return it }
+        val key = cacheKey(app, catalogVersion, shape)
+        return withContext(Dispatchers.IO) {
+            // Coalesce row/preload requests without an unbounded per-app lock map.
+            loadLocks[(key.hashCode() and Int.MAX_VALUE) % loadLocks.size].withLock {
+                val requestGeneration = synchronized(cache) {
+                    cache.get(key)?.let { return@withContext it }
+                    generation
+                }
+                val bitmap = renderIcon(app, shape) ?: return@withContext null
+                currentCoroutineContext().ensureActive()
+                synchronized(cache) {
+                    if (generation == requestGeneration) cache.put(key, bitmap)
+                }
+                bitmap
+            }
+        }
+    }
+
+    /** One background worker; stop at the memory budget rather than evicting visible icons. */
+    suspend fun preloadIcons(apps: List<AppEntry>, catalogVersion: Int, shape: IconShape) =
+        withContext(Dispatchers.IO) {
+            for (app in apps) {
+                currentCoroutineContext().ensureActive()
+                if (getCachedIcon(app, catalogVersion, shape) != null) continue
+                if (cache.size().toLong() + iconSizePx.toLong() * iconSizePx * 4 > cache.maxSize()) break
+                loadIcon(app, catalogVersion, shape)
+            }
+        }
+
+    private fun cacheKey(app: AppEntry, catalogVersion: Int, shape: IconShape) =
+        "$catalogVersion:${shape.name}:${app.id}"
+
+    private fun renderIcon(app: AppEntry, shape: IconShape): Bitmap? {
+        return try {
+            val user = app.userHandle(userManager) ?: return null
+            if (user !in launcherApps.profiles || userManager.isQuietModeEnabled(user)) return null
             val activity = launcherApps.resolveActivity(
                 Intent.makeMainActivity(ComponentName(app.packageName, app.activityName)), user,
-            ) ?: return@withContext null
+            ) ?: return null
             val icon = activity.getIcon(0)
             val rendered = Bitmap.createBitmap(iconSizePx, iconSizePx, Bitmap.Config.ARGB_8888).also { bitmap ->
                 val canvas = Canvas(bitmap)
@@ -69,12 +116,10 @@ class AppIconRepository(context: Context) {
                 }
             }
         } catch (e: PackageManager.NameNotFoundException) {
-            return@withContext null // Uninstalled between listing and loading.
+            null // Uninstalled between listing and loading.
         } catch (e: RuntimeException) {
-            return@withContext null // A broken or inaccessible app icon must not crash Home.
+            null // A broken or inaccessible app icon must not crash Home.
         }
-        cache.put(key, bitmap)
-        bitmap
     }
 
     private fun drawAdaptiveIcon(canvas: Canvas, icon: AdaptiveIconDrawable, shape: IconShape) {

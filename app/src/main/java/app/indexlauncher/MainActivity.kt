@@ -154,6 +154,9 @@ class MainActivity : ComponentActivity() {
                 val widgetGaps = widgetSpacing.spacing.collectAsStateWithLifecycle().value
                 val widgets = widgetPlacements.widgets.collectAsStateWithLifecycle().value
                 val favoriteIds = favorites.ids.collectAsStateWithLifecycle().value
+                LaunchedEffect(state.iconCatalogVersion, iconShape, favoriteIds) {
+                    viewModel.preloadIcons(iconShape, favoriteIds)
+                }
                 LaunchedEffect(counts.left) {
                     if (counts.left < 2) reorderPage = -1
                 }
@@ -194,6 +197,7 @@ class MainActivity : ComponentActivity() {
                                 onAppClick = ::launchApp,
                                 onOpenSettings = { startActivity(Intent(this@MainActivity, SettingsActivity::class.java)) },
                                 onLoadIcon = viewModel::loadIcon,
+                                getCachedIcon = viewModel::getCachedIcon,
                                 iconShape = iconShape,
                                 itemSpacing = spacing,
                                 widgetSpacing = widgetGaps,

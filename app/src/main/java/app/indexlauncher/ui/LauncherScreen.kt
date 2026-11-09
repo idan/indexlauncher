@@ -134,6 +134,7 @@ fun LauncherScreen(
     homeRequest: Int = 0,
     widgetSpacing: WidgetSpacing = WidgetSpacing.Default,
     leftScrubbingEnabled: Boolean = true,
+    getCachedIcon: (AppEntry, Int, IconShape) -> Bitmap? = { _, _, _ -> null },
 ) {
     val sections = remember(state.apps) { groupAppsByLetter(state.apps) }
     val favorites = remember(state.apps, favoriteIds) { favoriteApps(state.apps, favoriteIds) }
@@ -317,6 +318,7 @@ fun LauncherScreen(
                         catalogVersion = state.iconCatalogVersion,
                         iconShape = iconShape,
                         loadIcon = onLoadIcon,
+                        getCachedIcon = getCachedIcon,
                         itemSpacing = itemSpacing,
                         isFavorite = true,
                         showLabelShadow = true,
@@ -353,6 +355,7 @@ fun LauncherScreen(
                         catalogVersion = state.iconCatalogVersion,
                         iconShape = iconShape,
                         loadIcon = onLoadIcon,
+                        getCachedIcon = getCachedIcon,
                         itemSpacing = itemSpacing,
                         onToggleFavorite = onToggleFavorite,
                         onAppClick = onAppClick,
@@ -401,6 +404,7 @@ fun LauncherScreen(
                                                 iconShape = iconShape,
                                                 itemSpacing = itemSpacing,
                                                 loadIcon = onLoadIcon,
+                                                getCachedIcon = getCachedIcon,
                                                 isFavorite = app.id in favoriteIds,
                                                 showLabelShadow = false,
                                                 isOpen = openRowId == app.id,
