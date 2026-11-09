@@ -1,0 +1,77 @@
+:root {
+	--bg: #fbfaf8;
+	--ink: #1b1922;
+	--muted: #6c6977;
+	--faint: #dcd9e2;
+	--accent: #6a46e5;
+
+	--display: clamp(2.375rem, 0.9rem + 4.6vw, 4.75rem);
+	--gutter: clamp(1.5rem, 5vw, 4rem);
+	--measure: 72rem;
+
+	color-scheme: light dark;
+	font-family: 'Nunito Variable', ui-rounded, system-ui, sans-serif;
+	font-optical-sizing: auto;
+	background: var(--bg);
+	color: var(--ink);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-size-adjust: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #111015;
+		--ink: #f2f0f7;
+		--muted: #9b98a7;
+		--faint: #34313d;
+		--accent: #a58cff;
+	}
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	font-size: 1.0625rem;
+	line-height: 1.55;
+}
+
+h1,
+h2,
+h3,
+p,
+dl,
+dd {
+	margin: 0;
+}
+
+a {
+	color: inherit;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.2em;
+}
+
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 3px;
+	border-radius: 2px;
+}
+
+::selection {
+	background: var(--accent);
+	color: var(--bg);
+}
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
