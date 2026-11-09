@@ -25,16 +25,16 @@
 		{ ending: 'privacy', copy: 'No analytics, no tracking, and no permissions to grant.' },
 		{
 			ending: 'foldables',
-			copy: 'Unfold to see widget pages on the left. Apps stay on the right.'
+			copy: 'Unfold to see widget pages on the left. Apps always stay on the right.'
 		},
 		{ ending: 'open-source', copy: 'Free and MIT-licensed on GitHub.' },
 		{
 			ending: 'one-handed usage',
-			copy: 'The app list runs down the edge, right under your thumb. Works on the lefthand side, too!'
+			copy: 'The app index runs along both edges, where thumbs can reach comfortably.'
 		},
 		{
 			ending: 'alphabets',
-			copy: 'Scrub the A–Z rail to any letter. Best-effort handling of app names written in other scripts.'
+			copy: 'Scrub the A–Z rail to any letter. Also tries to handle app names written in non-Latin scripts.'
 		},
 		{
 			ending: 'a few favorite apps',
@@ -49,14 +49,26 @@
 	const details = [
 		{
 			title: 'Work profiles',
-			copy: 'Work apps sit beside personal ones, badged, with favorites of their own.'
+			copy: 'Apps installed to an Android work profile are badged and included in the app list.'
 		},
-		{ title: 'Search on demand', copy: 'One tap away in all apps, and never on your home screen.' },
+		{ title: 'Search', copy: 'Tap the mangifying glass while viewing the app list to search for apps by typing.' },
 		{
-			title: 'Your wallpaper',
-			copy: 'Static or live, shown in full, with your choice of icon shape.'
+			title: 'Reorderable favorites',
+			copy: 'Tap and hold to reorder your favorite apps.'
 		},
-		{ title: 'A gentle tick', copy: 'A subtle haptic tap for each letter as your thumb scrubs.' }
+		{ title: 'Haptic feedback', copy: 'A small haptic tap for each letter as you scrub through the index.' },
+		{ title: 'Widget pages', copy: 'Add pages of widgets to the left of your app list.' },
+		{ title: 'Favorite widgets', copy: 'Add widgets above your favorite apps.' },
+	];
+
+	const faqs = [
+		{ question: 'Did you use AI?', answer: "You betcha. AI is a tool. I like designing products, writing English, and scratching my own itches. I made this for myself. If I had to learn all of Android development first, this would not exist." },
+		{ question: 'Are you going to distribute through the play store?', answer: "Meh. That seems like a lot of work, and I'm not keen on jumping through all of Google's hoops. Maybe eventually?" },
+		{ question: "Where's the documentation?", answer: "TODO, also videos and screenshots and the like." },
+		{ question: 'This sucks. You suck!', answer: "The rest of the internet is but one click away!" },
+		{ question: 'This looks a lot like Niagara Launcher?', answer: "Index Launcher is inspired by Niagara Launcher, but it has its own unique features and design choices. Niagara is an amazing app, and I have been a paid user of it for years. Niagara was not the first alphabet launcher — prior to using Niagara, I was a lifetime paid user of Action Launcher. You might say that I'm an alphabet launcher afficionado! Neither one of those launchers was exactly what I wanted, but before AI made it possible for me to make tools that are perfectly tailored to my desires, I had to live with the product choices that they made. Now, I don't have to anymore. Index Launcher doesn't have half the features of Niagara, and nowhere near the polish and care that a commercial development team like Niagara's put into their app. But it does have widget pages and some other specific niceties I wanted." },
+
+
 	];
 </script>
 
@@ -90,7 +102,7 @@
 		</section>
 
 		<section class="details" aria-labelledby="details-title">
-			<h2 id="details-title">Also</h2>
+			<h2 id="details-title">Other details</h2>
 			<dl>
 				{#each details as detail (detail.title)}
 					<div>
@@ -100,10 +112,22 @@
 				{/each}
 			</dl>
 		</section>
+
+		<section class="details faq" aria-labelledby="faq-title">
+			<h2 id="faq-title">FAQ</h2>
+			<dl>
+				{#each faqs as faq (faq.question)}
+					<div>
+						<dt>{faq.question}</dt>
+						<dd>{faq.answer}</dd>
+					</div>
+				{/each}
+			</dl>
+		</section>
 	</main>
 
 	<footer>
-		<p>Made by <a href="https://github.com/idan">Idan Gazit</a>. No analytics here, either.</p>
+		<p>Made by <a href="https://gazit.me">Idan Gazit</a>.</p>
 	</footer>
 </div>
 
@@ -238,6 +262,10 @@
 	@media (min-width: 64rem) {
 		dl {
 			grid-template-columns: repeat(4, 1fr);
+		}
+
+		.faq dl {
+			grid-template-columns: repeat(2, 1fr);
 		}
 	}
 
