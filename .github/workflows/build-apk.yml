@@ -6,6 +6,8 @@ on:
     paths-ignore:
       - 'README.md'
       - 'docs/**'
+      - 'web/**'
+      - 'design/**'
   workflow_dispatch:
 
 permissions:
