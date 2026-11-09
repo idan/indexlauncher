@@ -234,7 +234,7 @@ class HomePagerTest {
                         counts = PageCounts(count, order),
                         widgetOverview = if (overview) { { Text("Page overview") } } else null,
                         homeRequest = homeRequest,
-                        appPage = { _, _, _, _ ->
+                        appPage = { _, _, _, _, _ ->
                             var value by rememberSaveable { mutableIntStateOf(0) }
                             var query by rememberSaveable { mutableStateOf("") }
                             var open by rememberSaveable { mutableStateOf(false) }

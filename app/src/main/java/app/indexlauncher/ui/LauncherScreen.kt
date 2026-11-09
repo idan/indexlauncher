@@ -14,6 +14,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.absoluteOffset
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -56,6 +58,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -67,6 +70,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -77,7 +81,6 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -90,17 +93,18 @@ import app.indexlauncher.model.WidgetSpacing
 import app.indexlauncher.model.WidgetWidth
 import app.indexlauncher.model.favoriteApps
 import app.indexlauncher.model.groupAppsByLetter
-import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
 private val railWidth = 48.dp
+private val leftScrubWidth = 36.dp
 private val railBottomInset = 54.dp // Keep the lowest entries away from the phone's corner.
 private val bubbleSize = 72.dp
 private val bubbleHorizontalDistance = 92.dp
+private val bubbleRailGap = 8.dp
 private const val RAIL_IDLE_DELAY_MS = 3_000L
 private const val RAIL_FADE_DURATION_MS = 300
 
-private data class RailScrub(val target: AlphabetRailTarget, val finger: Offset)
+private data class RailScrub(val target: AlphabetRailTarget, val finger: Offset, val side: RailSide)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -129,6 +133,7 @@ fun LauncherScreen(
     itemSpacing: ItemSpacing = ItemSpacing.Default,
     homeRequest: Int = 0,
     widgetSpacing: WidgetSpacing = WidgetSpacing.Default,
+    leftScrubbingEnabled: Boolean = true,
 ) {
     val sections = remember(state.apps) { groupAppsByLetter(state.apps) }
     val favorites = remember(state.apps, favoriteIds) { favoriteApps(state.apps, favoriteIds) }
@@ -178,6 +183,11 @@ fun LauncherScreen(
     val editWidgetLabel = stringResource(R.string.edit_widgets)
     val fadeSpec = tween<Float>(durationMillis = RAIL_FADE_DURATION_MS, easing = FastOutSlowInEasing)
     val hasRail = state.apps.isNotEmpty()
+    val leftGutter = if (hasRail && leftScrubbingEnabled) leftScrubWidth else 0.dp
+    LaunchedEffect(leftScrubbingEnabled, active) {
+        scrub = null
+        favoriteReorder.finish()
+    }
     val railOpacity by animateFloatAsState(
         targetValue = when {
             !hasRail || searchVisible -> 0f
@@ -226,7 +236,7 @@ fun LauncherScreen(
     }
 
     val favoritesContent: @Composable () -> Unit = {
-        val favoriteModifier = Modifier.padding(end = if (hasRail) railWidth else 0.dp)
+        val favoriteModifier = Modifier.absolutePadding(left = leftGutter, right = if (hasRail) railWidth else 0.dp)
         LazyColumn(
             state = favoritesListState,
             modifier = Modifier.fillMaxSize()
@@ -234,7 +244,8 @@ fun LauncherScreen(
                     state = favoriteReorder,
                     ids = favoriteKeys,
                     enabled = active && !homeEditing,
-                    endInsetPx = with(density) { (if (hasRail) railWidth else 0.dp).toPx() },
+                    leftInsetPx = with(density) { leftGutter.toPx() },
+                    rightInsetPx = with(density) { (if (hasRail) railWidth else 0.dp).toPx() },
                     onStart = {
                         openRowId = null
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -252,6 +263,7 @@ fun LauncherScreen(
         ) {
             if (homeWidgets.isNotEmpty() || homeEditing) {
                 item(key = "home-widgets") {
+                    // Widgets keep their configured outside padding and extend beneath both rails.
                     HomeWidgetRegion(
                         widgets = homeWidgets,
                         spacing = widgetSpacing,
@@ -351,7 +363,7 @@ fun LauncherScreen(
                 else -> {
                     Box(Modifier.fillMaxSize()) {
                         if (allAppsVisible) {
-                            Box(Modifier.fillMaxSize().padding(end = if (hasRail) railWidth else 0.dp)) {
+                            Box(Modifier.fillMaxSize().absolutePadding(left = leftGutter, right = if (hasRail) railWidth else 0.dp)) {
                                 LazyColumn(
                                     state = allAppsListState,
                                     modifier = Modifier.fillMaxSize(),
@@ -430,11 +442,13 @@ fun LauncherScreen(
                         }
                         if (state.apps.isNotEmpty()) {
                             LetterRail(
-                                modifier = Modifier.align(Alignment.TopEnd),
+                                modifier = Modifier.fillMaxSize(),
+                                leftScrubbingEnabled = leftScrubbingEnabled,
+                                active = active,
                                 targets = railTargets,
                                 activeTarget = scrub?.target
                                     ?: AlphabetRailTarget.Favorites.takeUnless { allAppsVisible },
-                                onScrub = { target, finger ->
+                                onScrub = { target, finger, side ->
                                     if (scrub?.target != target) {
                                         when (target) {
                                             AlphabetRailTarget.Favorites -> showFavorites(collapseRail = false)
@@ -442,7 +456,7 @@ fun LauncherScreen(
                                             AlphabetRailTarget.Settings -> openAllAppsTools()
                                         }
                                     }
-                                    scrub = RailScrub(target, finger)
+                                    scrub = RailScrub(target, finger, side)
                                 },
                                 onEnd = { scrub = null },
                                 onSelect = { target ->
@@ -464,21 +478,25 @@ fun LauncherScreen(
             }
         }
 
-        // Keep the bubble directly left of the finger, vertically centered on the active target.
+        // Left scrubs mirror feedback to the right without covering the rail.
         scrub?.takeUnless { suppressRail }?.let { active ->
-            val density = LocalDensity.current
-            val bubblePx = with(density) { bubbleSize.roundToPx() }
-            val distancePx = with(density) { bubbleHorizontalDistance.roundToPx() }
-            val railPx = with(density) { railWidth.roundToPx() }
-            val x = (constraints.maxWidth - railPx + active.finger.x - distancePx - bubblePx / 2f)
-                .roundToInt().coerceIn(0, (constraints.maxWidth - bubblePx).coerceAtLeast(0))
-            val y = (active.finger.y - bubblePx / 2f)
-                .roundToInt().coerceIn(0, (constraints.maxHeight - bubblePx).coerceAtLeast(0))
+            val position = railBubbleOffset(
+                widthPx = constraints.maxWidth,
+                heightPx = constraints.maxHeight,
+                railWidthPx = with(density) { railWidth.roundToPx() },
+                bubbleSizePx = with(density) { bubbleSize.roundToPx() },
+                horizontalDistancePx = with(density) { bubbleHorizontalDistance.roundToPx() },
+                railGapPx = with(density) { bubbleRailGap.roundToPx() },
+                finger = active.finger,
+                side = active.side,
+            )
 
             Box(
                 modifier = Modifier
-                    .offset { IntOffset(x, y) }
+                    .align(AbsoluteAlignment.TopLeft)
+                    .absoluteOffset { position }
                     .size(bubbleSize)
+                    .testTag("alphabet-rail-bubble")
                     .shadow(8.dp, CircleShape)
                     .background(Color.Black.copy(alpha = 0.78f), CircleShape)
                     .clearAndSetSemantics { }, // The rail already announces the selected target.
@@ -567,7 +585,9 @@ private fun LetterRail(
     modifier: Modifier,
     targets: List<AlphabetRailTarget>,
     activeTarget: AlphabetRailTarget?,
-    onScrub: (AlphabetRailTarget, Offset) -> Unit,
+    onScrub: (AlphabetRailTarget, Offset, RailSide) -> Unit,
+    leftScrubbingEnabled: Boolean,
+    active: Boolean,
     onEnd: () -> Unit,
     onSelect: (AlphabetRailTarget) -> Unit,
     opacity: Float,
@@ -593,12 +613,15 @@ private fun LetterRail(
         }
     }
 
-    BoxWithConstraints(modifier.width(railWidth).fillMaxHeight()) {
+    BoxWithConstraints(modifier.fillMaxSize()) {
         val track = railTrack(constraints.maxHeight, targets.size, glyphHeightPx, bottomInsetPx)
-        Box(
-            Modifier.fillMaxSize().pointerInput(targets, track) {
+        fun touchInput(side: RailSide): Modifier =
+            Modifier.pointerInput(targets, track, constraints.maxWidth, side, leftScrubbingEnabled, active) {
+                if (!active) return@pointerInput
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
+                    down.consume()
+                    if (scrubbing) return@awaitEachGesture
                     scrubbing = true
                     changeExpanded(true)
                     var lastTarget: AlphabetRailTarget? = null
@@ -610,7 +633,7 @@ private fun LetterRail(
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
                                 lastTarget = target
                             }
-                            scrub(target, position)
+                            scrub(target, position, side)
                         }
                     }
                     try {
@@ -636,75 +659,88 @@ private fun LetterRail(
                         }
                     }
                 }
-            },
+            }
+
+        Box(
+            Modifier.align(AbsoluteAlignment.TopRight).width(railWidth).fillMaxHeight()
+                .testTag("alphabet-rail-right").then(touchInput(RailSide.Right)),
         ) {
-        // The full-height invisible touch area remains active over any home widget beneath it.
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .height(with(density) { track.heightPx.toDp() })
-                .align(Alignment.TopCenter)
-                .offset(y = with(density) { track.topPx.toDp() })
-                .alpha(opacity),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            targets.forEach { target ->
-                val clickLabel = when (target) {
-                    AlphabetRailTarget.Favorites -> stringResource(R.string.show_favorites)
-                    is AlphabetRailTarget.Section -> stringResource(R.string.jump_to_letter, target.letter.toString())
-                    AlphabetRailTarget.Settings -> stringResource(R.string.show_launcher_tools)
-                }
-                val selected = activeTarget == target
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .clearAndSetSemantics {
-                            contentDescription = clickLabel
-                            onClick {
-                                changeExpanded(true)
-                                idleRestart++ // Accessibility clicks also reset the timeout.
-                                select(target)
-                                true
-                            }
-                        },
-                    contentAlignment = Alignment.Center,
-                ) {
+            // The full-height invisible touch area remains active over any home widget beneath it.
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .height(with(density) { track.heightPx.toDp() })
+                    .align(Alignment.TopCenter)
+                    .offset(y = with(density) { track.topPx.toDp() })
+                    .alpha(opacity),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                targets.forEach { target ->
+                    val clickLabel = when (target) {
+                        AlphabetRailTarget.Favorites -> stringResource(R.string.show_favorites)
+                        is AlphabetRailTarget.Section -> stringResource(R.string.jump_to_letter, target.letter.toString())
+                        AlphabetRailTarget.Settings -> stringResource(R.string.show_launcher_tools)
+                    }
+                    val selected = activeTarget == target
                     Box(
                         modifier = Modifier
-                            .background(
-                                if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                RoundedCornerShape(6.dp),
-                            )
-                            .padding(horizontal = 7.dp),
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .clearAndSetSemantics {
+                                contentDescription = clickLabel
+                                onClick {
+                                    changeExpanded(true)
+                                    idleRestart++ // Accessibility clicks also reset the timeout.
+                                    select(target)
+                                    true
+                                }
+                            },
                         contentAlignment = Alignment.Center,
                     ) {
-                        when (target) {
-                            AlphabetRailTarget.Favorites -> Icon(
-                                painterResource(R.drawable.ic_star),
-                                contentDescription = null,
-                                tint = if (selected) MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.size(16.dp),
-                            )
-                            is AlphabetRailTarget.Section -> Text(
-                                target.letter.toString(),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = if (selected) MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.onBackground,
-                            )
-                            AlphabetRailTarget.Settings -> Icon(
-                                painterResource(R.drawable.ic_settings_outline),
-                                contentDescription = null,
-                                tint = if (selected) MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.size(16.dp),
-                            )
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                    RoundedCornerShape(6.dp),
+                                )
+                                .padding(horizontal = 7.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            when (target) {
+                                AlphabetRailTarget.Favorites -> Icon(
+                                    painterResource(R.drawable.ic_star),
+                                    contentDescription = null,
+                                    tint = if (selected) MaterialTheme.colorScheme.onPrimary
+                                    else MaterialTheme.colorScheme.onBackground,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                                is AlphabetRailTarget.Section -> Text(
+                                    target.letter.toString(),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (selected) MaterialTheme.colorScheme.onPrimary
+                                    else MaterialTheme.colorScheme.onBackground,
+                                )
+                                AlphabetRailTarget.Settings -> Icon(
+                                    painterResource(R.drawable.ic_settings_outline),
+                                    contentDescription = null,
+                                    tint = if (selected) MaterialTheme.colorScheme.onPrimary
+                                    else MaterialTheme.colorScheme.onBackground,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
                         }
-                    }
                     }
                 }
             }
+        }
+        if (leftScrubbingEnabled) {
+            Box(
+                Modifier.align(AbsoluteAlignment.TopLeft).width(leftScrubWidth).fillMaxHeight()
+                    .then(touchInput(RailSide.Left))
+                    .testTag("alphabet-rail-left")
+                    // The visible right rail supplies the accessible letter actions.
+                    .clearAndSetSemantics { },
+            )
         }
     }
 }

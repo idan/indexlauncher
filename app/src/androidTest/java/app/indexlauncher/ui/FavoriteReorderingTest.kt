@@ -236,7 +236,7 @@ class FavoriteReorderingTest {
                     HomePager(
                         counts = PageCounts(left = 1),
                         widgetPage = { _: HomePage.Widgets, _ -> androidx.compose.material3.Text("Widget page") },
-                        appPage = { suppressRail, active, onRailInteraction, onScrimOpacityChange ->
+                        appPage = { suppressRail, active, leftScrubbingEnabled, onRailInteraction, onScrimOpacityChange ->
                             LauncherScreen(
                                 state = LauncherUiState(apps = apps, isLoading = false),
                                 favoriteIds = ids,
@@ -245,6 +245,7 @@ class FavoriteReorderingTest {
                                 widgetManager = manager,
                                 suppressRail = suppressRail,
                                 active = active,
+                                leftScrubbingEnabled = leftScrubbingEnabled,
                                 onRailInteraction = onRailInteraction,
                                 onScrimOpacityChange = onScrimOpacityChange,
                                 onToggleFavorite = { id -> ids = ids.filterNot { it == id } },

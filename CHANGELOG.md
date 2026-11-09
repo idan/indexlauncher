@@ -6,6 +6,8 @@ Completed work is recorded here; pending work lives in [TODO.md](TODO.md). This 
 
 ### Apps and navigation
 
+- Added invisible left-edge index scrubbing in single-pane Home/all apps, with the letter bubble following touch height beside the visible right rail. A 36 dp gutter keeps app rows out of the gesture area (60 dp app-icon inset), while home widgets use their configured outside padding on both sides and extend beneath the rail touch overlays. Search and two-pane layouts keep their existing spacing. Both sides share targets, haptics, and rail timing, with geometry and gesture regression tests.
+
 - Added long-press drag reordering for favorites, with a lifted-row preview, haptic feedback, edge auto-scroll, and accessible move-up/down actions. Drops persist the chosen order while preserving unavailable and distinct personal/work favorites; canceled drags leave the saved order unchanged.
 - Android’s Home button/gesture now returns directly to favorites from all apps, search, or compact widget pages, without resetting the view on ordinary resumes or replaying the action after recreation. Home and selecting `★` also reset favorites to the very top, including offsets inside oversized home widgets.
 - Made Home favorites-first, with a bottom-aligned vertical list and persistent insertion order. Left-swipe star actions add/remove favorites in Home, all apps, and search, with an accessibility equivalent.

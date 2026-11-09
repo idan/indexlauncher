@@ -70,6 +70,7 @@ fun HomePager(
     appPage: @Composable (
         suppressRail: Boolean,
         active: Boolean,
+        leftScrubbingEnabled: Boolean,
         onRailInteraction: () -> Unit,
         onScrimOpacityChange: (Float) -> Unit,
     ) -> Unit,
@@ -221,6 +222,7 @@ fun HomePager(
                     appPage(
                         !expanded && (pager.isScrollInProgress || pager.currentPage != counts.appsIndex || awaitingRailInteraction),
                         appsActive,
+                        !expanded,
                         {
                             if (appsActive) awaitingRailInteraction = false
                         },

@@ -50,7 +50,7 @@ class FoldableSearchTest {
                 Box(Modifier.width(if (expanded.value) 760.dp else 360.dp).height(650.dp)) {
                     HomePager(
                         counts = PageCounts(1),
-                        appPage = { suppressRail, active, onRailInteraction, onScrimOpacityChange ->
+                        appPage = { suppressRail, active, leftScrubbingEnabled, onRailInteraction, onScrimOpacityChange ->
                             LauncherScreen(
                                 state = LauncherUiState(apps = apps, isLoading = false),
                                 favoriteIds = apps.map { it.id },
@@ -59,6 +59,7 @@ class FoldableSearchTest {
                                 widgetManager = manager,
                                 suppressRail = suppressRail,
                                 active = active,
+                                leftScrubbingEnabled = leftScrubbingEnabled,
                                 onRailInteraction = onRailInteraction,
                                 onScrimOpacityChange = onScrimOpacityChange,
                                 onToggleFavorite = {},

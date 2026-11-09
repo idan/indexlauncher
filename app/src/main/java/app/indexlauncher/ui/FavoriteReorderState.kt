@@ -20,8 +20,6 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 
@@ -129,20 +127,19 @@ internal fun Modifier.reorderFavorites(
     state: FavoriteReorderState,
     ids: List<String>,
     enabled: Boolean,
-    endInsetPx: Float,
+    leftInsetPx: Float,
+    rightInsetPx: Float,
     onStart: () -> Unit,
     onDrop: (List<String>) -> Unit,
 ): Modifier {
     val currentIds by rememberUpdatedState(ids)
     val start by rememberUpdatedState(onStart)
     val drop by rememberUpdatedState(onDrop)
-    val direction = LocalLayoutDirection.current
-    return pointerInput(state, ids, enabled, endInsetPx, direction) {
+    return pointerInput(state, ids, enabled, leftInsetPx, rightInsetPx) {
         if (!enabled) return@pointerInput
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false)
-            val onRail = if (direction == LayoutDirection.Ltr) down.position.x >= size.width - endInsetPx
-                else down.position.x < endInsetPx
+            val onRail = down.position.x < leftInsetPx || down.position.x >= size.width - rightInsetPx
             if (onRail) return@awaitEachGesture
             val item = state.listState.layoutInfo.visibleItemsInfo.firstOrNull {
                 down.position.y >= it.offset && down.position.y < it.offset + it.size && it.key in currentIds

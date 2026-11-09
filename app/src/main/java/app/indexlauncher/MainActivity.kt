@@ -177,7 +177,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         } else null,
-                        appPage = { suppressRail, active, onRailInteraction, onScrimOpacityChange ->
+                        appPage = { suppressRail, active, leftScrubbingEnabled, onRailInteraction, onScrimOpacityChange ->
                             LauncherScreen(
                                 state = state,
                                 favoriteIds = favoriteIds,
@@ -186,6 +186,7 @@ class MainActivity : ComponentActivity() {
                                 widgetManager = widgetManager,
                                 suppressRail = suppressRail,
                                 active = active,
+                                leftScrubbingEnabled = leftScrubbingEnabled,
                                 onRailInteraction = onRailInteraction,
                                 onScrimOpacityChange = onScrimOpacityChange,
                                 onToggleFavorite = favorites::toggle,

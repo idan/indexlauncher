@@ -16,7 +16,7 @@ _All the rest of the text is AI, but I think it's useful._
 ## Features
 
 - **Favorites first.** A bottom-aligned list of your everyday apps, with a swipe-to-star action for adding and removing favorites. Long-press and drag to reorder; longer lists scroll, and your chosen order persists across restarts.
-- **Fast alphabetical access.** Tap or scrub the A–Z rail to jump through all apps, with a target bubble that follows your finger and a subtle haptic tick for each new entry while scrubbing. Only populated letters appear. Non-Latin app names keep their original labels, with romanized indexing and search aliases where available.
+- **Fast alphabetical access.** Tap or scrub the A–Z rail to jump through all apps, with a target bubble and a subtle haptic tick for each new entry while scrubbing. In single-pane mode, an invisible left-edge gutter also scrubs the right index; its bubble follows your finger vertically beside that index. Only populated letters appear. Non-Latin app names keep their original labels, with romanized indexing and search aliases where available.
 - **Search on demand.** Use the search button in all apps to open focused, keyboard-ready app search. Scrolling favorites never opens search, and there is no permanent search box on Home.
 - **Widgets without an icon grid.** Place widgets above favorites or on up to five pages to the left. Mix full-width widgets with pairs of half-width widgets; resize, reorder, and remove them in Edit mode. Reorder entire pages in a thumbnail overview. Hiding a page retains its widgets.
 - **Foldable-friendly Home.** Wide windows show widgets on the left while keeping your current favorites, all-apps, or search view on the right. Folding returns to the app screen; the widget pane remembers its page.
@@ -30,7 +30,7 @@ Index Launcher is in development and supports **Android 15+ (API 35)**. Private 
 
 | Action | How |
 | --- | --- |
-| Browse all apps | Touch or scrub the rail on the right edge. Letters jump to sections; `#` covers numbers and names without a Latin index initial. |
+| Browse all apps | Touch or scrub the right index, or the invisible left-edge gutter in single-pane mode. Letters jump to sections; `#` covers numbers and names without a Latin index initial. |
 | Return to favorites | Use Android’s Home button/swipe-up gesture, scrub to `★`, or press Back in all apps. Home and `★` reset the shared widgets/favorites list to the top, even if already showing favorites. Back closes a revealed app row first. |
 | Add/remove a favorite | Swipe left on an app row, then tap its star. This works in favorites, all apps, and search. |
 | Reorder favorites | Long-press a favorite, drag it up or down, then release to save. Hold near the top or bottom edge to scroll longer lists. Back cancels a drag; accessibility actions can move favorites up or down without dragging. |
@@ -41,7 +41,7 @@ Index Launcher is in development and supports **Android 15+ (API 35)**. Private 
 | Add/edit a widget on a left-side page | Long-press empty space to open the gallery, or long-press a widget to enter Edit mode. Empty pages also have an Add widget button. |
 | Reorder widget pages | With two or more pages, tap the reorder-pages icon (**Reorder** when space allows) in the widget edit bar, or **Reorder widget pages** below the page-count setting. Long-press a thumbnail and drag, or use its arrows; **Done** saves and **Cancel/Back** discards changes. Home stays on the right. |
 
-In widget Edit mode, drag the bottom handle for height or the side handle for half/full width when supported. Arrow controls change order; the trash control asks before removing a widget. Done or Back locks the layout. Providers control their own contents, so giving a widget more space does not guarantee that it will reflow. Home widgets and favorites scroll together in one vertical list, and home widgets temporarily hide in all apps and search.
+In widget Edit mode, drag the bottom handle for height or the side handle for half/full width when supported. Arrow controls change order; the trash control asks before removing a widget. Done or Back locks the layout. Providers control their own contents, so giving a widget more space does not guarantee that it will reflow. Home widgets and favorites scroll together in one vertical list, and home widgets temporarily hide in all apps and search. Home widgets can extend beneath the scrub areas at either edge; touches starting there navigate the index instead of operating the widget.
 
 Page thumbnails show the top of each screen, with widget labels and an indicator for content below the viewport. They use your configured widgets, not gallery examples; previews are kept in memory only. Reordering preserves each page’s widgets, sizes, and scroll/edit state. Reducing the page count hides the outermost pages in your chosen order; adding them back restores them. In wide windows, the overview occupies only the widget pane.
 
